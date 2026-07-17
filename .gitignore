@@ -1,0 +1,64 @@
+# =============================================
+# SECURITY - TUYỆT ĐỐI KHÔNG PUSH CÁC FILE NÀY
+# =============================================
+.env
+*.env
+.env.*
+
+# =============================================
+# THƯ MỤC LỚN / KHÔNG CẦN THIẾT
+# =============================================
+
+# Virtual environment Python
+.venv/
+venv/
+env/
+
+# ChromaDB vector database (tái tạo bằng retriever.py)
+vector_db/
+
+# File .whl cài thủ công (rất nặng - 2.4GB)
+*.whl
+
+# AI Model cache (lưu ở máy local, không cần push)
+AI_Models_Cache/
+
+# =============================================
+# DỮ LIỆU GỐC (PDF thường nặng)
+# =============================================
+data/raw/
+
+# =============================================
+# FILE LOG & TRẠNG THÁI
+# =============================================
+*.log
+build_vector_db.log
+processed_state.json
+
+# =============================================
+# PYTHON
+# =============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# =============================================
+# IDE / EDITOR
+# =============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# =============================================
+# MISC
+# =============================================
+test.txt

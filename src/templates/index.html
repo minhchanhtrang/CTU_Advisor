@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CTU Academic Advisor – Trợ lý Học vụ Đại học Cần Thơ</title>
+    <meta name="description" content="Chatbot tư vấn học vụ thông minh của Đại học Cần Thơ – Giải đáp câu hỏi về chương trình đào tạo, quy chế học vụ, ngành học." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <!-- ==============================
+         SIDEBAR - Lịch sử hội thoại
+    ============================== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="/static/CTU_logo.png" alt="Logo CTU" class="logo-img" />
+                <div class="logo-text">
+                    <span class="logo-title">CTU Advisor</span>
+                    <span class="logo-sub">Trợ lý học vụ AI</span>
+                </div>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;">
+                <button class="theme-toggle-btn" id="themeToggleSidebar" aria-label="Đổi giao diện" title="Chuyển sang Dark mode">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+                <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Đóng sidebar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <button class="new-chat-btn" id="newChatBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Cuộc hội thoại mới
+        </button>
+
+        <div class="history-label">Lịch sử hội thoại</div>
+        <div class="history-list" id="historyList">
+            <!-- Lịch sử được render bởi JS -->
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-info">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Đang kiểm tra...</span>
+            </div>
+            <button class="clear-all-btn" id="clearAllBtn" title="Xóa tất cả lịch sử">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                </svg>
+                Xóa tất cả
+            </button>
+        </div>
+    </aside>
+
+    <!-- ==============================
+         MAIN CONTENT - Khu vực chat
+    ============================== -->
+    <main class="main-content" id="mainContent">
+
+        <!-- Top bar (Mobile) -->
+        <header class="topbar">
+            <button class="menu-btn" id="menuBtn" aria-label="Mở menu">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            <span class="topbar-title">
+                <img src="/static/CTU_logo.png" alt="Logo CTU" class="topbar-logo-img" />
+                CTU Advisor
+            </span>
+            <div style="display:flex;gap:6px;">
+                <button class="theme-toggle-btn" id="themeToggleTopbar" aria-label="Đổi giao diện" title="Chuyển sang Dark mode">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+                <button class="topbar-new-btn" id="topbarNewBtn" aria-label="Cuộc hội thoại mới">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Chat messages area -->
+        <div class="chat-area" id="chatArea">
+            <!-- Welcome screen -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-glow"></div>
+                <div class="welcome-icon">
+                    <img src="/static/CTU_logo.png" alt="Logo CTU" class="welcome-logo-img" />
+                </div>
+                <h1 class="welcome-title">Trợ lý Học vụ CTU</h1>
+                <p class="welcome-desc">
+                    Xin chào! Tôi là trợ lý AI của Đại học Cần Thơ.<br/>
+                    Tôi có thể giúp bạn giải đáp mọi thắc mắc về <strong>chương trình đào tạo</strong>,
+                    <strong>quy chế học vụ</strong> và <strong>ngành học</strong>.
+                </p>
+                <div class="suggestion-grid">
+                    <button class="suggestion-chip" data-question="Ngành Công nghệ thông tin có những môn học gì?">
+                        <span class="chip-icon">💻</span>
+                        <span>Ngành CNTT học những gì?</span>
+                    </button>
+                    <button class="suggestion-chip" data-question="Điều kiện tốt nghiệp đại học là gì?">
+                        <span class="chip-icon">🎯</span>
+                        <span>Điều kiện tốt nghiệp</span>
+                    </button>
+                    <button class="suggestion-chip" data-question="Quy định về điểm thi và điểm học phần là gì?">
+                        <span class="chip-icon">📊</span>
+                        <span>Quy định về điểm thi</span>
+                    </button>
+                    <button class="suggestion-chip" data-question="Ngành Kỹ thuật phần mềm có bao nhiêu tín chỉ?">
+                        <span class="chip-icon">📚</span>
+                        <span>Tín chỉ ngành KTPM</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages container -->
+            <div class="messages-container" id="messagesContainer"></div>
+        </div>
+
+        <!-- Chat input area -->
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea
+                    id="userInput"
+                    class="chat-input"
+                    placeholder="Nhập câu hỏi về ngành học, tín chỉ, quy chế học vụ..."
+                    rows="1"
+                    aria-label="Nhập câu hỏi"
+                ></textarea>
+                <button class="send-btn" id="sendBtn" aria-label="Gửi câu hỏi" disabled>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="input-hint">
+                CTU Advisor có thể mắc lỗi. Hãy kiểm tra thông tin quan trọng từ nhà trường.
+            </div>
+        </div>
+    </main>
+
+    <!-- Overlay for mobile sidebar -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
