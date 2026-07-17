@@ -150,6 +150,4 @@ Browser → Flask → match_nganh() → fetch context → Gemini LLM → Trả l
 
 ---
 
-## 📄 License
-
-MIT License — Đồ án tốt nghiệp Đại học Cần Thơ
+"© 2026 Trang Minh Chánh. Đồ án Niên luận Đại học Cần Thơ."
