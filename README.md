@@ -150,4 +150,4 @@ Browser → Flask → match_nganh() → fetch context → Gemini LLM → Trả l
 
 ---
 
-© 2026 Trang Minh Chánh. Đồ án Niên luận Đại học Cần Thơ. 
+© 2026 Trang Minh Chánh. Đồ án Niên luận Đại học Cần Thơ.
