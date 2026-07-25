@@ -1069,3 +1069,150 @@ body, .sidebar, .main-content, .topbar,
     background: rgba(37, 99, 235, 0.35);
     color: var(--text-primary);
 }
+
+/* ==========================================
+   MIC BUTTON (Speech-to-Text)
+   ========================================== */
+.mic-btn {
+    background: transparent;
+    border: 1.5px solid var(--border-medium);
+    border-radius: 10px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: color var(--transition-fast),
+                border-color var(--transition-fast),
+                background var(--transition-fast),
+                transform var(--transition-fast),
+                box-shadow var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Ẩn stop icon mặc định */
+.mic-btn .stop-icon { display: none; }
+.mic-btn .mic-icon  { display: flex; }
+
+.mic-btn:hover {
+    color: var(--brand-primary);
+    border-color: var(--brand-primary);
+    background: var(--brand-glow);
+    transform: scale(1.05);
+}
+
+.mic-btn:active {
+    transform: scale(0.97);
+}
+
+/* === Trạng thái ĐANG GHI (recording) === */
+.mic-btn.recording {
+    background: rgba(220, 38, 38, 0.12);
+    border-color: #dc2626;
+    color: #dc2626;
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+    animation: mic-pulse 1.5s ease-in-out infinite;
+}
+
+.mic-btn.recording .stop-icon { display: flex; }
+.mic-btn.recording .mic-icon  { display: none; }
+
+@keyframes mic-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+    70%  { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+/* Ripple khi nhấn mic */
+.mic-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at center, rgba(220, 38, 38, 0.3) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.mic-btn.recording::after {
+    opacity: 1;
+    animation: mic-ripple 1.5s ease-in-out infinite;
+}
+
+@keyframes mic-ripple {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50%       { transform: scale(1.15); opacity: 0.1; }
+}
+
+/* Trạng thái không hỗ trợ */
+.mic-btn.unsupported {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.mic-btn.unsupported:hover {
+    transform: none;
+    background: transparent;
+    border-color: var(--border-medium);
+    color: var(--text-secondary);
+}
+
+/* === TOAST NOTIFICATION === */
+.mic-toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: rgba(15, 28, 53, 0.92);
+    color: #f0f4ff;
+    padding: 9px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 999;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+body.dark-mode .mic-toast {
+    background: rgba(240, 244, 255, 0.95);
+    color: #0f1c35;
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+.mic-toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.mic-toast.error {
+    background: rgba(220, 38, 38, 0.92);
+    color: #fff;
+}
+
+/* Dot nhấp nháy khi ghi âm */
+.mic-toast-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ef4444;
+    display: inline-block;
+    animation: toast-dot-blink 1s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes toast-dot-blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.2; }
+}

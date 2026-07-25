@@ -141,6 +141,19 @@
                     rows="1"
                     aria-label="Nhập câu hỏi"
                 ></textarea>
+                <button class="mic-btn" id="micBtn" aria-label="Nhập bằng giọng nói" title="Nhấn để nói">
+                    <!-- Icon mic (default) -->
+                    <svg class="mic-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                    <!-- Icon stop (khi đang ghi) -->
+                    <svg class="stop-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="4" y="4" width="16" height="16" rx="3"/>
+                    </svg>
+                </button>
                 <button class="send-btn" id="sendBtn" aria-label="Gửi câu hỏi" disabled>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <line x1="22" y1="2" x2="11" y2="13"/>
@@ -152,6 +165,9 @@
                 CTU Advisor có thể mắc lỗi. Hãy kiểm tra thông tin quan trọng từ nhà trường.
             </div>
         </div>
+
+        <!-- Toast notification cho mic -->
+        <div class="mic-toast" id="micToast" role="status" aria-live="polite"></div>
     </main>
 
     <!-- Overlay for mobile sidebar -->

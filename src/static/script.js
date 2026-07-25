@@ -9,7 +9,7 @@ marked.setOptions({
     highlight: function (code, lang) {
         if (lang && hljs.getLanguage(lang)) {
             try { return hljs.highlight(code, { language: lang }).value; }
-            catch (_) {}
+            catch (_) { }
         }
         return hljs.highlightAuto(code).value;
     }
@@ -49,7 +49,7 @@ function toggleTheme() {
 }
 
 const ICON_MOON = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
-const ICON_SUN  = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+const ICON_SUN = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
 
 // ==========================================
 // STATE MANAGEMENT
@@ -551,6 +551,180 @@ function initEventListeners() {
 }
 
 // ==========================================
+// SPEECH-TO-TEXT (Web Speech API)
+// ==========================================
+const micBtn = document.getElementById("micBtn");
+const micToast = document.getElementById("micToast");
+
+// Kiểm tra trình duyệt có hỗ trợ Web Speech API không
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+let recognition = null;       // SpeechRecognition instance
+let isRecording = false;       // Trạng thái đang ghi âm
+let toastTimer = null;         // Timer ẩn toast
+let interimBuffer = "";        // Text tạm (chưa final)
+let preMicText = "";           // Nội dung trong input trước khi bật mic
+
+/**
+ * Hiển thị toast notification
+ * @param {string} message - Nội dung thông báo
+ * @param {"info"|"recording"|"error"} type - Loại toast
+ * @param {number} duration - Thời gian ẩn (ms), 0 = không tự ẩn
+ */
+function showMicToast(message, type = "info", duration = 0) {
+    if (toastTimer) clearTimeout(toastTimer);
+    micToast.className = "mic-toast";
+    if (type === "error") micToast.classList.add("error");
+
+    if (type === "recording") {
+        micToast.innerHTML = `<span class="mic-toast-dot"></span>${message}`;
+    } else {
+        micToast.innerHTML = message;
+    }
+
+    // Force reflow để restart animation
+    micToast.offsetHeight;
+    micToast.classList.add("visible");
+
+    if (duration > 0) {
+        toastTimer = setTimeout(() => hideMicToast(), duration);
+    }
+}
+
+function hideMicToast() {
+    if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+    micToast.classList.remove("visible");
+}
+
+/** Khởi tạo SpeechRecognition */
+function initSpeechRecognition() {
+    if (!SpeechRecognition) return null;
+
+    const rec = new SpeechRecognition();
+    rec.lang = "vi-VN";          // Tiếng Việt
+    rec.continuous = true;       // Tiếp tục lắng nghe
+    rec.interimResults = true;   // Hiển thị text tạm thời
+
+    rec.onstart = () => {
+        isRecording = true;
+        interimBuffer = "";
+        preMicText = userInput.value;
+        micBtn.classList.add("recording");
+        showMicToast("Đang lắng nghe...", "recording");
+    };
+
+    rec.onresult = (event) => {
+        let finalText = "";
+        interimBuffer = "";
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalText += transcript;
+            } else {
+                interimBuffer += transcript;
+            }
+        }
+
+        // Ghép text final vào input (giữ nội dung trước đó nếu có)
+        if (finalText) {
+            const base = preMicText.trim();
+            const current = userInput.value;
+            // Tính phần đã nhận được sau preMicText
+            const recognized = current.slice(base.length).trim();
+            userInput.value = base ? base + " " + recognized + finalText : recognized + finalText;
+            preMicText = userInput.value; // Cập nhật base
+            interimBuffer = "";
+        } else if (interimBuffer) {
+            // Hiển thị text tạm (interim) vào input để người dùng xem realtime
+            const base = preMicText.trim();
+            userInput.value = base ? base + " " + interimBuffer : interimBuffer;
+        }
+
+        autoResizeInput();
+        updateSendBtn();
+    };
+
+    rec.onerror = (event) => {
+        isRecording = false;
+        micBtn.classList.remove("recording");
+
+        let errorMsg = "Lỗi nhận dạng giọng nói.";
+        switch (event.error) {
+            case "not-allowed":
+            case "permission-denied":
+                errorMsg = "❌ Bạn chưa cấp quyền microphone. Vui lòng kiểm tra cài đặt trình duyệt.";
+                break;
+            case "no-speech":
+                errorMsg = "Không nghe thấy giọng nói. Hãy thử lại!";
+                break;
+            case "network":
+                errorMsg = "❌ Lỗi kết nối mạng. Nhận dạng giọng nói cần internet.";
+                break;
+            case "audio-capture":
+                errorMsg = "❌ Không tìm thấy microphone. Hãy kiểm tra thiết bị.";
+                break;
+            case "aborted":
+                hideMicToast();
+                return;
+        }
+        showMicToast(errorMsg, "error", 3500);
+    };
+
+    rec.onend = () => {
+        if (isRecording) {
+            // Ghi âm kết thúc tự nhiên (không phải do user nhấn stop)
+            isRecording = false;
+            micBtn.classList.remove("recording");
+            hideMicToast();
+        }
+    };
+
+    return rec;
+}
+
+/** Bật/tắt ghi âm */
+function toggleMic() {
+    if (!SpeechRecognition) {
+        showMicToast("❌ Trình duyệt không hỗ trợ nhận dạng giọng nói. Hãy dùng Chrome hoặc Edge.", "error", 4000);
+        return;
+    }
+
+    if (isRecording) {
+        // Dừng ghi âm
+        isRecording = false;
+        recognition.stop();
+        micBtn.classList.remove("recording");
+        hideMicToast();
+
+        // Xóa text interim còn lại, giữ text final
+        const finalizedText = preMicText.trim();
+        userInput.value = finalizedText;
+        autoResizeInput();
+        updateSendBtn();
+        userInput.focus();
+    } else {
+        // Bắt đầu ghi âm — tạo lại instance mỗi lần để tránh lỗi trạng thái cũ
+        recognition = initSpeechRecognition();
+        if (!recognition) return;
+        try {
+            recognition.start();
+        } catch (e) {
+            showMicToast("❌ Không thể khởi động microphone. Thử lại!", "error", 3000);
+        }
+    }
+}
+
+// Kiểm tra hỗ trợ và gắn event cho nút mic
+function initMicButton() {
+    if (!SpeechRecognition) {
+        micBtn.classList.add("unsupported");
+        micBtn.title = "Trình duyệt không hỗ trợ nhận dạng giọng nói";
+    }
+    micBtn.addEventListener("click", toggleMic);
+}
+
+// ==========================================
 // INIT
 // ==========================================
 function init() {
@@ -563,6 +737,7 @@ function init() {
 
     renderAll();
     initEventListeners();
+    initMicButton();
     checkStatus();
 
     setTimeout(() => userInput.focus(), 100);
