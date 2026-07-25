@@ -31,6 +31,12 @@
                 <button class="theme-toggle-btn" id="themeToggleSidebar" aria-label="Đổi giao diện" title="Chuyển sang Dark mode">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                 </button>
+                <!-- Nút thu gọn sidebar (desktop) -->
+                <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Thu gọn sidebar" title="Thu gọn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                </button>
                 <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Đóng sidebar">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -69,6 +75,13 @@
          MAIN CONTENT - Khu vực chat
     ============================== -->
     <main class="main-content" id="mainContent">
+
+        <!-- Nút mở sidebar khi đã thu gọn (desktop) -->
+        <button class="sidebar-expand-btn" id="sidebarExpandBtn" aria-label="Mở sidebar" title="Mở sidebar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+            </svg>
+        </button>
 
         <!-- Top bar (Mobile) -->
         <header class="topbar">

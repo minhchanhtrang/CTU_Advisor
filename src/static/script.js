@@ -161,6 +161,8 @@ const sidebar = document.getElementById("sidebar");
 const sidebarOverlay = document.getElementById("sidebarOverlay");
 const menuBtn = document.getElementById("menuBtn");
 const sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
+const sidebarCollapseBtn = document.getElementById("sidebarCollapseBtn");
+const sidebarExpandBtn = document.getElementById("sidebarExpandBtn");
 const newChatBtn = document.getElementById("newChatBtn");
 const topbarNewBtn = document.getElementById("topbarNewBtn");
 const historyList = document.getElementById("historyList");
@@ -526,10 +528,14 @@ function initEventListeners() {
         });
     });
 
-    // Sidebar toggle
+    // Sidebar toggle (mobile)
     menuBtn.addEventListener("click", openSidebar);
     sidebarToggleBtn.addEventListener("click", closeSidebar);
     sidebarOverlay.addEventListener("click", closeSidebar);
+
+    // Sidebar collapse/expand (desktop)
+    sidebarCollapseBtn.addEventListener("click", collapseSidebar);
+    sidebarExpandBtn.addEventListener("click", expandSidebar);
 
     // Theme toggle — bind tất cả buttons có class .theme-toggle-btn
     document.querySelectorAll(".theme-toggle-btn").forEach(btn => {
@@ -548,6 +554,34 @@ function initEventListeners() {
     window.addEventListener("resize", () => {
         if (window.innerWidth > 768) closeSidebar();
     });
+}
+
+// ==========================================
+// SIDEBAR COLLAPSE (Desktop)
+// ==========================================
+const SIDEBAR_COLLAPSED_KEY = "ctu_sidebar_collapsed";
+
+/** Thu gọn sidebar (desktop) */
+function collapseSidebar() {
+    document.body.classList.add("sidebar-collapsed");
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, "1");
+}
+
+/** Mở rộng sidebar (desktop) */
+function expandSidebar() {
+    document.body.classList.remove("sidebar-collapsed");
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, "0");
+}
+
+/** Khởi tạo trạng thái sidebar từ localStorage */
+function initSidebarCollapse() {
+    // Chỉ áp dụng trên desktop
+    if (window.innerWidth <= 768) return;
+    const saved = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+    if (saved === "1") {
+        // Áp dụng ngay không có animation (thêm class trước khi DOM render xong)
+        document.body.classList.add("sidebar-collapsed");
+    }
 }
 
 // ==========================================
@@ -729,6 +763,7 @@ function initMicButton() {
 // ==========================================
 function init() {
     initTheme();
+    initSidebarCollapse();   // Áp dụng sớm để tránh flash layout
     loadFromStorage();
 
     if (STATE.conversations.length === 0 || !STATE.activeId) {
