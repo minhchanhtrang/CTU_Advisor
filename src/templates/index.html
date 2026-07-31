@@ -12,7 +12,7 @@
     <!-- Highlight.js for code syntax highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="/static/style.css?v=2" />
 </head>
 <body data-username="{{ user.username }}" data-fullname="{{ user.full_name }}">
     <!-- ==============================
@@ -52,39 +52,46 @@
             Cuộc hội thoại mới
         </button>
 
-        <div class="history-label">Lịch sử hội thoại</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-right: 16px;">
+            <div class="history-label">Lịch sử hội thoại</div>
+            <button class="clear-all-btn" id="clearAllBtn" title="Xóa tất cả lịch sử" style="padding: 2px 6px; margin-bottom: 8px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                </svg>
+            </button>
+        </div>
         <div class="history-list" id="historyList">
             <!-- Lịch sử được render bởi JS -->
         </div>
 
         <div class="sidebar-footer">
             <!-- User info -->
-            <div class="user-info-block" id="userInfoBlock">
+            <div class="user-info-block" id="userInfoBlock" style="cursor: pointer; width: 100%; position: relative;">
                 <div class="user-avatar" id="userAvatar"></div>
-                <div class="user-details">
+                <div class="user-details" style="flex: 1;">
                     <span class="user-name" id="userName">{{ user.full_name or user.username }}</span>
                     <span class="user-handle" id="userHandle">@{{ user.username }}</span>
                 </div>
-                <a href="/auth/logout" class="logout-btn" id="logoutBtn" title="Đăng xuất" aria-label="Đăng xuất">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-                        <polyline points="16 17 21 12 16 7"/>
-                        <line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
-                </a>
-            </div>
-            <!-- Status + Clear -->
-            <div class="sidebar-info-row">
-                <div class="sidebar-info">
-                    <span class="status-dot" id="statusDot"></span>
-                    <span id="statusText">Đang kiểm tra...</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-tertiary);">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+                
+                <!-- Popover Menu -->
+                <div id="userMenu" class="user-menu">
+                    <a href="#" id="menuProfile" class="user-menu-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Hồ sơ
+                    </a>
+                    <a href="#" id="menuHelp" class="user-menu-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        Trợ giúp
+                    </a>
+                    <div class="user-menu-divider"></div>
+                    <a href="/auth/logout" class="user-menu-item logout">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        Đăng xuất
+                    </a>
                 </div>
-                <button class="clear-all-btn" id="clearAllBtn" title="Xóa tất cả lịch sử">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
-                    </svg>
-                    Xóa tất cả
-                </button>
             </div>
         </div>
     </aside>
@@ -204,6 +211,55 @@
     <!-- Overlay for mobile sidebar -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <script src="/static/script.js"></script>
+    <!-- Edit Profile Modal -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cập nhật tài khoản</h3>
+                <button class="modal-close" id="closeProfileModal" aria-label="Đóng">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label for="profileFullName">Họ và tên</label>
+                        <input type="text" id="profileFullName" name="full_name" class="modal-input" placeholder="Họ và tên..." value="{{ user.full_name }}" />
+                    </div>
+                    <div class="form-group">
+                        <label for="profilePassword">Mật khẩu mới (Tùy chọn)</label>
+                        <input type="password" id="profilePassword" name="password" class="modal-input" placeholder="Bỏ trống nếu không đổi..." minlength="6" />
+                    </div>
+                    <div class="form-group">
+                        <label for="profileConfirm">Xác nhận mật khẩu mới</label>
+                        <input type="password" id="profileConfirm" class="modal-input" placeholder="Xác nhận mật khẩu..." />
+                    </div>
+                    <div id="profileError" style="color: var(--error); font-size: 0.85rem; margin-bottom: 12px; display: none;"></div>
+                    <div id="profileSuccess" style="color: var(--success); font-size: 0.85rem; margin-bottom: 12px; display: none;"></div>
+                    <button type="submit" class="modal-btn">Lưu thay đổi</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal-overlay" id="helpModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>Hướng dẫn sử dụng</h3>
+                <button class="modal-close" id="closeHelpModal" aria-label="Đóng">&times;</button>
+            </div>
+            <div class="modal-body" style="font-size: 14px; line-height: 1.6; color: var(--text-secondary);">
+                <p style="margin-bottom: 12px;"><strong style="color: var(--text-primary);">Chào mừng bạn đến với CTU Advisor!</strong><br>Hệ thống AI hỗ trợ giải đáp các thắc mắc về học vụ, quy chế và thông tin trường Đại học Cần Thơ.</p>
+                <ul style="padding-left: 20px; margin-bottom: 16px;">
+                    <li style="margin-bottom: 8px;"><strong>Hỏi đáp nhanh chóng:</strong> Bạn có thể gõ câu hỏi vào khung chat hoặc sử dụng biểu tượng 🎤 <strong>Micro</strong> để đặt câu hỏi bằng giọng nói.</li>
+                    <li style="margin-bottom: 8px;"><strong>Tạo và quản lý cuộc trò chuyện:</strong> Nhấn nút "Cuộc hội thoại mới" để bắt đầu một phiên tư vấn khác. Toàn bộ lịch sử sẽ được tự động lưu bên trái màn hình.</li>
+                    <li style="margin-bottom: 8px;"><strong>Dọn dẹp lịch sử:</strong> Nhấn vào biểu tượng thùng rác (Xóa tất cả) ở mục "Lịch sử hội thoại" để xóa nhanh toàn bộ tin nhắn cũ.</li>
+                    <li><strong>Quản lý tài khoản:</strong> Chọn "Hồ sơ" trong menu góc dưới bên trái để cập nhật Họ tên hoặc đổi Mật khẩu.</li>
+                </ul>
+                <p style="font-size: 13px; font-style: italic; color: var(--text-tertiary);">Lưu ý: CTU Advisor đang trong quá trình phát triển. Vui lòng đối chiếu các thông tin quan trọng tại website chính thức của trường hoặc phòng Công tác Sinh viên (CTSV).</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js?v=2"></script>
 </body>
 </html>

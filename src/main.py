@@ -347,6 +347,21 @@ def me():
     })
 
 
+@app.route("/api/me/update", methods=["POST"])
+@login_required
+def update_me():
+    """Cập nhật thông tin user hiện tại."""
+    data = request.get_json() or {}
+    full_name = data.get("full_name", current_user.full_name)
+    password = data.get("password")
+
+    success = db.update_user_info(current_user.id, full_name, password)
+    if success:
+        current_user.full_name = full_name
+        return jsonify({"message": "Cập nhật thành công.", "full_name": full_name}), 200
+    return jsonify({"error": "Không thể cập nhật thông tin."}), 500
+
+
 # ==========================================
 # FILE SERVING API
 # ==========================================

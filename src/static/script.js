@@ -183,8 +183,10 @@ async function clearAllConversations() {
         STATE.activeMessages = [];
         localStorage.removeItem("ctu_active_conv_id");
         renderAll();
+        alert("Đã xóa tất cả lịch sử hội thoại.");
     } catch (e) {
         console.error("Lỗi xóa tất cả:", e);
+        alert("Có lỗi xảy ra khi xóa.");
     }
 }
 
@@ -230,8 +232,6 @@ const messagesContainer = document.getElementById("messagesContainer");
 const chatArea          = document.getElementById("chatArea");
 const userInput         = document.getElementById("userInput");
 const sendBtn           = document.getElementById("sendBtn");
-const statusDot         = document.getElementById("statusDot");
-const statusText        = document.getElementById("statusText");
 const userAvatar        = document.getElementById("userAvatar");
 
 // ==========================================
@@ -534,24 +534,6 @@ function escapeHtml(text) {
         .replace(/"/g, "&quot;");
 }
 
-// ==========================================
-// STATUS CHECK
-// ==========================================
-async function checkStatus() {
-    try {
-        const res = await fetch("/api/status");
-        if (res.ok) {
-            const data = await res.json();
-            statusDot.className = "status-dot online";
-            statusText.textContent = `Sẵn sàng (${data.nganh_count || 0} ngành)`;
-        } else {
-            throw new Error();
-        }
-    } catch {
-        statusDot.className = "status-dot error";
-        statusText.textContent = "Lỗi kết nối";
-    }
-}
 
 // ==========================================
 // EVENT LISTENERS
@@ -619,7 +601,10 @@ function initEventListeners() {
 
     // Clear all
     clearAllBtn.addEventListener("click", () => {
-        if (STATE.conversations.length === 0) return;
+        if (STATE.conversations.length === 0) {
+            alert("Không có lịch sử để xóa.");
+            return;
+        }
         if (confirm("Bạn có chắc muốn xóa tất cả lịch sử hội thoại không?")) {
             clearAllConversations();
         }
@@ -811,12 +796,139 @@ function initMicButton() {
 }
 
 // ==========================================
+// PROFILE MODAL
+// ==========================================
+function initProfileModal() {
+    const profileModal = document.getElementById("profileModal");
+    const closeBtn = document.getElementById("closeProfileModal");
+    const profileForm = document.getElementById("profileForm");
+    const errorDiv = document.getElementById("profileError");
+    const successDiv = document.getElementById("profileSuccess");
+    const userInfoBlock = document.getElementById("userInfoBlock");
+    const userMenu = document.getElementById("userMenu");
+    const menuProfile = document.getElementById("menuProfile");
+    const menuHelp = document.getElementById("menuHelp");
+
+    if (!profileModal || !userInfoBlock) return;
+
+    // Toggle popover menu
+    userInfoBlock.addEventListener("click", (e) => {
+        if (e.target.closest("#userMenu")) return;
+        if (userMenu) userMenu.classList.toggle("active");
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener("click", (e) => {
+        if (!userInfoBlock.contains(e.target) && userMenu) {
+            userMenu.classList.remove("active");
+        }
+    });
+
+    if (menuProfile) {
+        menuProfile.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (userMenu) userMenu.classList.remove("active");
+            profileModal.classList.add("active");
+            errorDiv.style.display = "none";
+            successDiv.style.display = "none";
+        });
+    }
+
+    const helpModal = document.getElementById("helpModal");
+    const closeHelpBtn = document.getElementById("closeHelpModal");
+
+    if (menuHelp) {
+        menuHelp.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (userMenu) userMenu.classList.remove("active");
+            if (helpModal) helpModal.classList.add("active");
+        });
+        
+        const closeHelp = () => {
+            if (helpModal) helpModal.classList.remove("active");
+        };
+        if (closeHelpBtn) closeHelpBtn.addEventListener("click", closeHelp);
+        if (helpModal) {
+            helpModal.addEventListener("click", (e) => {
+                if (e.target === helpModal) closeHelp();
+            });
+        }
+    }
+
+    // Close modal
+    const closeModal = () => {
+        profileModal.classList.remove("active");
+    };
+
+    closeBtn.addEventListener("click", closeModal);
+    profileModal.addEventListener("click", (e) => {
+        if (e.target === profileModal) closeModal();
+    });
+
+    // Handle form submit
+    profileForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorDiv.style.display = "none";
+        successDiv.style.display = "none";
+
+        const formData = new FormData(profileForm);
+        const password = formData.get("password");
+        const confirm = profileForm.querySelector("#profileConfirm").value;
+
+        if (password && password !== confirm) {
+            errorDiv.textContent = "Mật khẩu xác nhận không khớp.";
+            errorDiv.style.display = "block";
+            return;
+        }
+
+        const body = {
+            full_name: formData.get("full_name")
+        };
+        if (password) body.password = password;
+
+        try {
+            const btn = profileForm.querySelector("button[type=submit]");
+            const oldText = btn.textContent;
+            btn.textContent = "Đang lưu...";
+            btn.disabled = true;
+
+            const res = await apiPost("/api/me/update", body);
+            
+            successDiv.textContent = res.message || "Cập nhật thành công!";
+            successDiv.style.display = "block";
+            
+            // Update UI
+            const nameEl = document.getElementById("userName");
+            if (nameEl) nameEl.textContent = res.full_name || body.full_name;
+            
+            // Update userAvatar
+            const fullname = res.full_name || body.full_name;
+            const letter = (fullname || document.body.dataset.username || "?").charAt(0).toUpperCase();
+            if (userAvatar) userAvatar.textContent = letter;
+
+            setTimeout(() => {
+                closeModal();
+                profileForm.reset();
+            }, 1500);
+        } catch (err) {
+            errorDiv.textContent = err.message || "Lỗi khi cập nhật.";
+            errorDiv.style.display = "block";
+        } finally {
+            const btn = profileForm.querySelector("button[type=submit]");
+            btn.textContent = "Lưu thay đổi";
+            btn.disabled = false;
+        }
+    });
+}
+
+// ==========================================
 // INIT
 // ==========================================
 async function init() {
     initTheme();
     initSidebarCollapse();
     initUserAvatar();
+    initProfileModal();
 
     // Hiện loading state ban đầu
     historyList.innerHTML = `<div class="history-empty">Đang tải...</div>`;
@@ -826,7 +938,6 @@ async function init() {
 
     initEventListeners();
     initMicButton();
-    checkStatus();
 
     setTimeout(() => userInput.focus(), 100);
 }

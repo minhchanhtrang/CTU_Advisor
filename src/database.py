@@ -151,6 +151,41 @@ def verify_password(user: dict, password: str) -> bool:
     return check_password_hash(user["password_hash"], password)
 
 
+def update_user_info(user_id: int, full_name: str, password: str = None) -> bool:
+    """Cập nhật thông tin user. Nếu có password mới thì hash và cập nhật."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            if password:
+                password_hash = generate_password_hash(password)
+                cur.execute(
+                    """
+                    UPDATE users
+                    SET full_name = %s, password_hash = %s
+                    WHERE id = %s
+                    """,
+                    (full_name.strip(), password_hash, user_id),
+                )
+            else:
+                cur.execute(
+                    """
+                    UPDATE users
+                    SET full_name = %s
+                    WHERE id = %s
+                    """,
+                    (full_name.strip(), user_id),
+                )
+            updated = cur.rowcount > 0
+        conn.commit()
+        return updated
+    except Exception as e:
+        conn.rollback()
+        print(f"[DB] update_user_info error: {e}")
+        return False
+    finally:
+        conn.close()
+
+
 # ==========================================
 # CONVERSATION CRUD
 # ==========================================
