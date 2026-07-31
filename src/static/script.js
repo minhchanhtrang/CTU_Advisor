@@ -321,7 +321,6 @@ function renderChatArea() {
 function appendMessageToDOM(role, content, animate = true, targetConvId = null) {
     if (targetConvId && targetConvId !== STATE.activeId) return;
 
-    const time = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
     const row = document.createElement("div");
     row.className = `message-row ${role}${animate ? "" : " no-animate"}`;
 
@@ -335,9 +334,6 @@ function appendMessageToDOM(role, content, animate = true, targetConvId = null) 
     const bubbleClass = role === "assistant" ? "message-bubble assistant-content" : "message-bubble";
 
     row.innerHTML = `
-        <div class="message-meta">
-            <span class="message-time">${time}</span>
-        </div>
         <div class="${bubbleClass}">${bubbleContent}</div>
         ${role === "assistant" ? `
         <div class="message-actions">
