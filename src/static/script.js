@@ -708,9 +708,7 @@ function initSpeechRecognition() {
 
         if (finalText) {
             const base = preMicText.trim();
-            const current = userInput.value;
-            const recognized = current.slice(base.length).trim();
-            userInput.value = base ? base + " " + recognized + finalText : recognized + finalText;
+            userInput.value = base ? base + " " + finalText : finalText;
             preMicText = userInput.value;
             interimBuffer = "";
         } else if (interimBuffer) {
