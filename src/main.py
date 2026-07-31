@@ -12,7 +12,7 @@ os.environ["HF_HOME"] = r"D:\AI_Models_Cache"
 os.environ["LLAMA_INDEX_CACHE_DIR"] = r"D:\AI_Models_Cache"
 
 # pyrefly: ignore [missing-import]
-from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
+from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, send_from_directory
 from flask_cors import CORS
 from flask_login import (
     LoginManager, UserMixin, login_user, logout_user,
@@ -345,6 +345,18 @@ def me():
         "username": current_user.username,
         "full_name": current_user.full_name,
     })
+
+
+# ==========================================
+# FILE SERVING API
+# ==========================================
+
+@app.route("/api/pdfs/<path:filename>", methods=["GET"])
+@login_required
+def serve_pdf(filename):
+    """Serve PDF files from data/raw/DaiHoc for references."""
+    pdf_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "raw", "DaiHoc")
+    return send_from_directory(pdf_dir, filename)
 
 
 # ==========================================

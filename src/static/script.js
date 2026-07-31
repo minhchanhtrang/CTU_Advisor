@@ -2,8 +2,15 @@
 // CTU Chatbot - Frontend Script (Auth + DB version)
 // ==========================================
 
-// --- Marked.js Configuration ---
+const renderer = new marked.Renderer();
+const linkRenderer = renderer.link;
+renderer.link = (href, title, text) => {
+    const html = linkRenderer.call(renderer, href, title, text);
+    return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+};
+
 marked.setOptions({
+    renderer: renderer,
     breaks: true,
     gfm: true,
     highlight: function (code, lang) {

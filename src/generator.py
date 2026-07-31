@@ -30,8 +30,7 @@ QA_PROMPT_STR = (
     "'Hiện tại dữ liệu được cung cấp chưa có thông tin về vấn đề này...'\n"
     "LUẬT 2: Không được tóm tắt. Nếu sinh viên yêu cầu liệt kê, hãy liệt kê đầy đủ 100% các mục.\n"
     "LUẬT 3 (QUAN TRỌNG): KHÔNG ghi chú nguồn trong từng câu. Thay vào đó, sau khi trả lời xong, "
-    "hãy thêm một dòng trống rồi in: '---\n📌 **Nguồn tham khảo:** [liệt kê các tên mục/ngành từ thẻ [Mục: ...] trong ngữ cảnh, "
-    "phân cách bằng dấu \" · \"]'\n"
+    "hãy thêm một dòng trống rồi in: '---\n📌 **Nguồn tham khảo:** [liệt kê các link tài liệu gốc từ thẻ (Link: ...) trong ngữ cảnh, theo dạng markdown link: [Tên mục](Link), phân cách bằng dấu \" · \"]'\n"
     "Câu hỏi của sinh viên: {query_str}\n"
     "Câu trả lời của Chatbot: "
 )
@@ -187,8 +186,16 @@ def fetch_full_context_for_nganh(collection, nganh_value):
     context_pieces = []
     for doc, meta in zip(docs, metas):
         header = meta.get("header_path", "Không rõ")
+        
+        file_path = meta.get("file_path", "")
+        if file_path:
+            pdf_filename = os.path.basename(file_path).replace(".md", ".pdf")
+            link = f"/api/pdfs/{pdf_filename}"
+        else:
+            link = "#"
+            
         # Gắn thêm đường dẫn tiêu đề vào trước nội dung để AI không bị lạc trôi
-        context_pieces.append(f"--- [Mục: {header}] ---\n{doc}")
+        context_pieces.append(f"--- [Mục: {header}] (Link: {link}) ---\n{doc}")
         
     return "\n\n".join(context_pieces)
 
@@ -326,10 +333,18 @@ def ask(chatbot_state, user_input, chat_history: list = None):
 
     # Nếu có lịch sử, build lại response với context-aware prompt
     if history_str and response.source_nodes:
-        context_str = "\n\n".join(
-            f"--- [Mục: {node.metadata.get('header_path', 'Không rõ')}] ---\n{node.text}"
-            for node in response.source_nodes
-        )
+        context_pieces = []
+        for node in response.source_nodes:
+            header = node.metadata.get("header_path", "Không rõ")
+            file_path = node.metadata.get("file_path", "")
+            if file_path:
+                pdf_filename = os.path.basename(file_path).replace(".md", ".pdf")
+                link = f"/api/pdfs/{pdf_filename}"
+            else:
+                link = "#"
+            context_pieces.append(f"--- [Mục: {header}] (Link: {link}) ---\n{node.text}")
+            
+        context_str = "\n\n".join(context_pieces)
         prompt = chatbot_state["qa_template"].format(
             context_str=context_str,
             history_str=history_str,
