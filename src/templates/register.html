@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng ký – CTU Advisor</title>
+    <meta name="description" content="Tạo tài khoản CTU Advisor – Trợ lý học vụ AI của Đại học Cần Thơ." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body.auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0d1b3e 0%, #112266 40%, #1a3a8a 70%, #0d5dc4 100%);
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.25;
+            animation: blobFloat 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .auth-blob-1 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, #e8001d, #c20019);
+            top: -150px; right: -150px;
+            animation-delay: 0s;
+        }
+        .auth-blob-2 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, #1a5dc4, #0038a8);
+            bottom: -100px; left: -100px;
+            animation-delay: -4s;
+        }
+        .auth-blob-3 {
+            width: 280px; height: 280px;
+            background: radial-gradient(circle, #f5c400, #e8a800);
+            top: 30%; left: 15%;
+            animation-delay: -2s;
+        }
+        @keyframes blobFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33%  { transform: translate(20px, -30px) scale(1.05); }
+            66%  { transform: translate(-15px, 20px) scale(0.95); }
+        }
+
+        .auth-card {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 440px;
+            margin: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 40px 36px;
+            box-shadow:
+                0 32px 80px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            animation: cardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .auth-logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        .auth-logo-img {
+            width: 48px; height: 48px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+        }
+        .auth-logo-text { display: flex; flex-direction: column; }
+        .auth-logo-title {
+            font-size: 1.2rem; font-weight: 700;
+            color: #fff; letter-spacing: -0.3px;
+        }
+        .auth-logo-sub {
+            font-size: 0.73rem;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .auth-heading {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        .auth-sub {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 24px;
+        }
+
+        .auth-form { display: flex; flex-direction: column; gap: 14px; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group.full { grid-column: 1 / -1; }
+
+        .form-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.65);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 11px 14px;
+            background: rgba(255,255,255,0.1);
+            border: 1.5px solid rgba(255,255,255,0.15);
+            border-radius: 11px;
+            color: #fff;
+            font-size: 0.93rem;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+        }
+        .form-input::placeholder { color: rgba(255,255,255,0.28); }
+        .form-input:focus {
+            border-color: rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.13);
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.07);
+        }
+
+        .form-hint {
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.35);
+            margin-top: 2px;
+        }
+
+        .auth-error {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 14px;
+            background: rgba(232, 0, 29, 0.18);
+            border: 1px solid rgba(232, 0, 29, 0.4);
+            border-radius: 10px;
+            color: #ff8a8a;
+            font-size: 0.85rem;
+        }
+        .auth-error svg { flex-shrink: 0; }
+
+        .auth-btn {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #1a6ed4, #0d4fa3);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 6px 24px rgba(26, 110, 212, 0.45);
+            margin-top: 6px;
+        }
+        .auth-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 32px rgba(26, 110, 212, 0.55);
+        }
+        .auth-btn:active { transform: translateY(0); }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.45);
+        }
+        .auth-footer a {
+            color: #7eb8ff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .auth-footer a:hover { color: #acd4ff; text-decoration: underline; }
+
+        /* Password strength indicator */
+        .pw-strength {
+            display: flex;
+            gap: 4px;
+            margin-top: 5px;
+        }
+        .pw-bar {
+            flex: 1;
+            height: 3px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 2px;
+            transition: background 0.3s;
+        }
+        .pw-bar.weak  { background: #e8001d; }
+        .pw-bar.medium { background: #f5c400; }
+        .pw-bar.strong { background: #00c851; }
+
+        @media (max-width: 480px) {
+            .auth-card { padding: 28px 20px; }
+            .form-row { grid-template-columns: 1fr; }
+            .auth-heading { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body class="auth-page">
+    <div class="auth-blob auth-blob-1"></div>
+    <div class="auth-blob auth-blob-2"></div>
+    <div class="auth-blob auth-blob-3"></div>
+
+    <div class="auth-card">
+        <div class="auth-logo-wrap">
+            <img src="/static/CTU_logo.png" alt="Logo CTU" class="auth-logo-img" />
+            <div class="auth-logo-text">
+                <span class="auth-logo-title">CTU Advisor</span>
+                <span class="auth-logo-sub">Trợ lý Học vụ AI – ĐH Cần Thơ</span>
+            </div>
+        </div>
+
+        <h1 class="auth-heading">Tạo tài khoản</h1>
+        <p class="auth-sub">Đăng ký miễn phí để lưu lịch sử hội thoại và sử dụng đầy đủ tính năng.</p>
+
+        {% if error %}
+        <div class="auth-error" role="alert">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form class="auth-form" method="POST" action="/auth/register" id="register-form">
+            <div class="form-group">
+                <label class="form-label" for="reg-fullname">Họ và tên <span style="color:rgba(255,255,255,0.3)">(tùy chọn)</span></label>
+                <input
+                    id="reg-fullname"
+                    class="form-input"
+                    type="text"
+                    name="full_name"
+                    placeholder="Nguyễn Văn A..."
+                    autocomplete="name"
+                />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="reg-username">Tên đăng nhập <span style="color:#e8001d">*</span></label>
+                <input
+                    id="reg-username"
+                    class="form-input"
+                    type="text"
+                    name="username"
+                    placeholder="Tối thiểu 3 ký tự..."
+                    autocomplete="username"
+                    minlength="3"
+                    required
+                />
+                <span class="form-hint">Chỉ dùng chữ cái, số, dấu gạch dưới.</span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="reg-password">Mật khẩu <span style="color:#e8001d">*</span></label>
+                <input
+                    id="reg-password"
+                    class="form-input"
+                    type="password"
+                    name="password"
+                    placeholder="Tối thiểu 6 ký tự..."
+                    autocomplete="new-password"
+                    minlength="6"
+                    required
+                />
+                <!-- Password strength bars -->
+                <div class="pw-strength" id="pw-strength" style="display:none">
+                    <div class="pw-bar" id="pw-bar-1"></div>
+                    <div class="pw-bar" id="pw-bar-2"></div>
+                    <div class="pw-bar" id="pw-bar-3"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="reg-confirm">Xác nhận mật khẩu <span style="color:#e8001d">*</span></label>
+                <input
+                    id="reg-confirm"
+                    class="form-input"
+                    type="password"
+                    name="confirm_password"
+                    placeholder="Nhập lại mật khẩu..."
+                    autocomplete="new-password"
+                    required
+                />
+            </div>
+
+            <button class="auth-btn" type="submit" id="register-submit-btn">
+                Tạo tài khoản
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Đã có tài khoản?
+            <a href="/auth/login">Đăng nhập</a>
+        </div>
+    </div>
+
+    <script>
+        // Password strength indicator
+        const pwInput = document.getElementById('reg-password');
+        const pwStrength = document.getElementById('pw-strength');
+        const bars = [
+            document.getElementById('pw-bar-1'),
+            document.getElementById('pw-bar-2'),
+            document.getElementById('pw-bar-3'),
+        ];
+
+        pwInput.addEventListener('input', () => {
+            const val = pwInput.value;
+            pwStrength.style.display = val.length > 0 ? 'flex' : 'none';
+
+            let score = 0;
+            if (val.length >= 6) score++;
+            if (val.length >= 10) score++;
+            if (/[A-Z]/.test(val) && /[0-9]/.test(val)) score++;
+
+            const levels = ['weak', 'medium', 'strong'];
+            bars.forEach((bar, i) => {
+                bar.className = 'pw-bar';
+                if (i < score) bar.classList.add(levels[Math.min(score - 1, 2)]);
+            });
+        });
+
+        // Confirm password live validation
+        const confirmInput = document.getElementById('reg-confirm');
+        confirmInput.addEventListener('input', () => {
+            if (confirmInput.value && confirmInput.value !== pwInput.value) {
+                confirmInput.style.borderColor = 'rgba(232,0,29,0.6)';
+            } else {
+                confirmInput.style.borderColor = '';
+            }
+        });
+    </script>
+</body>
+</html>

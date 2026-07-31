@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng nhập – CTU Advisor</title>
+    <meta name="description" content="Đăng nhập vào CTU Advisor – Trợ lý học vụ AI của Đại học Cần Thơ." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <style>
+        /* ── Auth page layout ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body.auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0d1b3e 0%, #112266 40%, #1a3a8a 70%, #0d5dc4 100%);
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background blobs */
+        .auth-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.25;
+            animation: blobFloat 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .auth-blob-1 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, #e8001d, #c20019);
+            top: -150px; left: -150px;
+            animation-delay: 0s;
+        }
+        .auth-blob-2 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, #1a5dc4, #0038a8);
+            bottom: -100px; right: -100px;
+            animation-delay: -4s;
+        }
+        .auth-blob-3 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, #f5c400, #e8a800);
+            top: 50%; right: 20%;
+            animation-delay: -2s;
+        }
+        @keyframes blobFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33%  { transform: translate(20px, -30px) scale(1.05); }
+            66%  { transform: translate(-15px, 20px) scale(0.95); }
+        }
+
+        /* Glass card */
+        .auth-card {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 420px;
+            margin: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 40px 36px;
+            box-shadow:
+                0 32px 80px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            animation: cardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Logo & header */
+        .auth-logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        .auth-logo-img {
+            width: 52px;
+            height: 52px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+        }
+        .auth-logo-text { display: flex; flex-direction: column; }
+        .auth-logo-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+        .auth-logo-sub {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.55);
+            font-weight: 400;
+        }
+
+        .auth-heading {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        .auth-sub {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.55);
+            margin-bottom: 28px;
+        }
+
+        /* Form */
+        .auth-form { display: flex; flex-direction: column; gap: 16px; }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1.5px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+        }
+        .form-input::placeholder { color: rgba(255,255,255,0.3); }
+        .form-input:focus {
+            border-color: rgba(255,255,255,0.45);
+            background: rgba(255,255,255,0.14);
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.08);
+        }
+
+        /* Error alert */
+        .auth-error {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            background: rgba(232, 0, 29, 0.18);
+            border: 1px solid rgba(232, 0, 29, 0.4);
+            border-radius: 10px;
+            color: #ff8a8a;
+            font-size: 0.875rem;
+        }
+        .auth-error svg { flex-shrink: 0; }
+
+        /* Submit button */
+        .auth-btn {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #e8001d, #b50017);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.2s;
+            box-shadow: 0 6px 24px rgba(232, 0, 29, 0.4);
+            margin-top: 4px;
+        }
+        .auth-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 32px rgba(232, 0, 29, 0.5);
+            background: linear-gradient(135deg, #ff1a35, #cc0020);
+        }
+        .auth-btn:active { transform: translateY(0); }
+
+        /* Footer link */
+        .auth-footer {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.5);
+        }
+        .auth-footer a {
+            color: #7eb8ff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .auth-footer a:hover { color: #acd4ff; text-decoration: underline; }
+
+        /* Divider */
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 4px 0;
+        }
+        .auth-divider::before, .auth-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.12);
+        }
+        .auth-divider span {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.3);
+        }
+
+        @media (max-width: 480px) {
+            .auth-card { padding: 30px 22px; }
+            .auth-heading { font-size: 1.35rem; }
+        }
+    </style>
+</head>
+<body class="auth-page">
+    <!-- Animated background -->
+    <div class="auth-blob auth-blob-1"></div>
+    <div class="auth-blob auth-blob-2"></div>
+    <div class="auth-blob auth-blob-3"></div>
+
+    <div class="auth-card">
+        <!-- Logo -->
+        <div class="auth-logo-wrap">
+            <img src="/static/CTU_logo.png" alt="Logo CTU" class="auth-logo-img" />
+            <div class="auth-logo-text">
+                <span class="auth-logo-title">CTU Advisor</span>
+                <span class="auth-logo-sub">Trợ lý Học vụ AI – ĐH Cần Thơ</span>
+            </div>
+        </div>
+
+        <h1 class="auth-heading">Đăng nhập</h1>
+        <p class="auth-sub">Chào mừng bạn quay lại! Vui lòng đăng nhập để tiếp tục.</p>
+
+        <!-- Error message -->
+        {% if error %}
+        <div class="auth-error" role="alert">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form class="auth-form" method="POST" action="/auth/login">
+            <div class="form-group">
+                <label class="form-label" for="login-username">Tên đăng nhập</label>
+                <input
+                    id="login-username"
+                    class="form-input"
+                    type="text"
+                    name="username"
+                    placeholder="Nhập tên đăng nhập..."
+                    autocomplete="username"
+                    required
+                />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="login-password">Mật khẩu</label>
+                <input
+                    id="login-password"
+                    class="form-input"
+                    type="password"
+                    name="password"
+                    placeholder="Nhập mật khẩu..."
+                    autocomplete="current-password"
+                    required
+                />
+            </div>
+
+            <button class="auth-btn" type="submit" id="login-submit-btn">
+                Đăng nhập
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Chưa có tài khoản?
+            <a href="/auth/register">Đăng ký ngay</a>
+        </div>
+    </div>
+</body>
+</html>

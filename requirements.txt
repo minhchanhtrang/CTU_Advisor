@@ -8,3 +8,5 @@ chromadb
 llama-index-vector-stores-chroma
 flask
 flask-cors
+flask-login
+psycopg2-binary

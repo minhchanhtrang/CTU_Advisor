@@ -1,5 +1,5 @@
 // ==========================================
-// CTU Chatbot - Frontend Script
+// CTU Chatbot - Frontend Script (Auth + DB version)
 // ==========================================
 
 // --- Marked.js Configuration ---
@@ -35,7 +35,6 @@ function applyTheme(theme, animate = true) {
     } else {
         document.body.classList.remove("dark-mode");
     }
-    // Update all toggle buttons
     document.querySelectorAll(".theme-toggle-btn").forEach(btn => {
         btn.innerHTML = theme === "dark" ? ICON_SUN : ICON_MOON;
         btn.title = theme === "dark" ? "Chuyển sang Light mode" : "Chuyển sang Dark mode";
@@ -49,143 +48,205 @@ function toggleTheme() {
 }
 
 const ICON_MOON = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
-const ICON_SUN = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+const ICON_SUN  = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
 
 // ==========================================
-// STATE MANAGEMENT
+// STATE MANAGEMENT (server-backed)
 // ==========================================
 const STATE = {
-    conversations: [],      // Danh sách các cuộc hội thoại
-    activeId: null,         // ID cuộc hội thoại đang active
-    isLoading: false,       // Đang chờ AI trả lời?
-    loadingConvId: null,    // ID conv đang được xử lý (để tránh render sai khi switch)
+    conversations: [],      // [{id, title, updated_at}] — từ server
+    activeId: null,         // ID conversation đang active (số nguyên từ DB)
+    activeMessages: [],     // Messages của conversation hiện tại
+    isLoading: false,
+    loadingConvId: null,
 };
 
-// Lấy cuộc hội thoại hiện tại
 function getActive() {
     return STATE.conversations.find(c => c.id === STATE.activeId) || null;
 }
 
 // ==========================================
-// LOCAL STORAGE
+// SERVER API HELPERS
 // ==========================================
-const STORAGE_KEY = "ctu_chatbot_conversations";
-const ACTIVE_KEY = "ctu_chatbot_active_id";
 
-function saveToStorage() {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE.conversations));
-        localStorage.setItem(ACTIVE_KEY, STATE.activeId || "");
-    } catch (e) {
-        console.warn("LocalStorage không khả dụng:", e);
-    }
+async function apiGet(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
 }
 
-function loadFromStorage() {
+async function apiPost(url, body) {
+    const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    return res.json();
+}
+
+async function apiDelete(url) {
+    const res = await fetch(url, { method: "DELETE" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+}
+
+async function apiPatch(url, body) {
+    const res = await fetch(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+}
+
+// ==========================================
+// CONVERSATION MANAGEMENT (server-backed)
+// ==========================================
+
+/** Tải danh sách conversations từ server */
+async function loadConversationsFromServer() {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) STATE.conversations = JSON.parse(raw);
-        const activeId = localStorage.getItem(ACTIVE_KEY);
-        if (activeId && STATE.conversations.find(c => c.id === activeId)) {
-            STATE.activeId = activeId;
+        const convs = await apiGet("/api/conversations");
+        STATE.conversations = convs;
+        // Khôi phục active conversation từ localStorage
+        const savedActiveId = parseInt(localStorage.getItem("ctu_active_conv_id") || "0");
+        if (savedActiveId && STATE.conversations.find(c => c.id === savedActiveId)) {
+            STATE.activeId = savedActiveId;
+            await loadMessagesForConversation(savedActiveId);
+        } else if (STATE.conversations.length > 0) {
+            // Không có active cụ thể → không chọn gì (hiện welcome screen)
+            STATE.activeId = null;
         }
+        renderAll();
     } catch (e) {
-        console.warn("Lỗi đọc LocalStorage:", e);
+        console.error("Lỗi tải conversations:", e);
+    }
+}
+
+/** Tải messages cho một conversation */
+async function loadMessagesForConversation(convId) {
+    try {
+        const msgs = await apiGet(`/api/conversations/${convId}/messages`);
+        STATE.activeMessages = msgs; // [{role, content, ...}]
+    } catch (e) {
+        console.error("Lỗi tải messages:", e);
+        STATE.activeMessages = [];
+    }
+}
+
+/** Tạo conversation mới — trả về conv object hoặc null */
+async function createConversationOnServer(title = "Cuộc hội thoại mới") {
+    try {
+        const conv = await apiPost("/api/conversations", { title });
+        STATE.conversations.unshift(conv);
+        return conv;
+    } catch (e) {
+        console.error("Lỗi tạo conversation:", e);
+        return null;
+    }
+}
+
+/** Xóa một conversation */
+async function deleteConversation(id) {
+    try {
+        await apiDelete(`/api/conversations/${id}`);
+        STATE.conversations = STATE.conversations.filter(c => c.id !== id);
+        if (STATE.activeId === id) {
+            STATE.activeId = null;
+            STATE.activeMessages = [];
+            localStorage.removeItem("ctu_active_conv_id");
+        }
+        renderAll();
+    } catch (e) {
+        console.error("Lỗi xóa conversation:", e);
+    }
+}
+
+/** Xóa tất cả conversations */
+async function clearAllConversations() {
+    try {
+        await apiDelete("/api/conversations/all");
         STATE.conversations = [];
+        STATE.activeId = null;
+        STATE.activeMessages = [];
+        localStorage.removeItem("ctu_active_conv_id");
+        renderAll();
+    } catch (e) {
+        console.error("Lỗi xóa tất cả:", e);
     }
 }
 
-// ==========================================
-// CONVERSATION MANAGEMENT
-// ==========================================
-function generateId() {
-    return "conv_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
-}
-
-function createNewConversation() {
-    const conv = {
-        id: generateId(),
-        title: "Cuộc hội thoại mới",
-        createdAt: Date.now(),
-        messages: [],
-    };
-    STATE.conversations.unshift(conv);
-    STATE.activeId = conv.id;
-    saveToStorage();
-    return conv;
-}
-
-function deleteConversation(id) {
-    STATE.conversations = STATE.conversations.filter(c => c.id !== id);
-    if (STATE.activeId === id) {
-        STATE.activeId = STATE.conversations[0]?.id || null;
-    }
-    saveToStorage();
-    renderAll();
-}
-
-function clearAllConversations() {
-    STATE.conversations = [];
-    STATE.activeId = null;
-    saveToStorage();
-    renderAll();
-}
-
-function switchConversation(id) {
+/** Chuyển sang conversation khác */
+async function switchConversation(id) {
     if (STATE.activeId === id) {
         closeSidebarOnMobile();
         return;
     }
-    // Nếu đang loading, chỉ update state nhưng không hủy request
-    // Request cũ vẫn chạy nền và sẽ lưu vào đúng conv của nó (không update DOM)
     STATE.activeId = id;
-    saveToStorage();
-    renderAll();
+    STATE.activeMessages = [];
+    localStorage.setItem("ctu_active_conv_id", id);
+    renderHistoryList();
+
+    // Hiển thị loading skeleton
+    showLoadingMessages();
+
+    await loadMessagesForConversation(id);
+    renderChatArea();
     closeSidebarOnMobile();
 }
 
-// Auto-generate title từ tin nhắn đầu tiên của user
-function autoTitle(conv) {
-    const firstUser = conv.messages.find(m => m.role === "user");
-    if (firstUser) {
-        const text = firstUser.content.trim();
-        return text.length > 40 ? text.slice(0, 40) + "…" : text;
-    }
-    return "Cuộc hội thoại mới";
+/** Auto-generate title từ tin nhắn đầu tiên */
+function autoTitle(text) {
+    return text.length > 55 ? text.slice(0, 55) + "…" : text;
 }
 
 // ==========================================
 // DOM ELEMENTS
 // ==========================================
-const sidebar = document.getElementById("sidebar");
-const sidebarOverlay = document.getElementById("sidebarOverlay");
-const menuBtn = document.getElementById("menuBtn");
-const sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
+const sidebar           = document.getElementById("sidebar");
+const sidebarOverlay    = document.getElementById("sidebarOverlay");
+const menuBtn           = document.getElementById("menuBtn");
+const sidebarToggleBtn  = document.getElementById("sidebarToggleBtn");
 const sidebarCollapseBtn = document.getElementById("sidebarCollapseBtn");
-const sidebarExpandBtn = document.getElementById("sidebarExpandBtn");
-const newChatBtn = document.getElementById("newChatBtn");
-const topbarNewBtn = document.getElementById("topbarNewBtn");
-const historyList = document.getElementById("historyList");
-const clearAllBtn = document.getElementById("clearAllBtn");
-const welcomeScreen = document.getElementById("welcomeScreen");
+const sidebarExpandBtn  = document.getElementById("sidebarExpandBtn");
+const newChatBtn        = document.getElementById("newChatBtn");
+const topbarNewBtn      = document.getElementById("topbarNewBtn");
+const historyList       = document.getElementById("historyList");
+const clearAllBtn       = document.getElementById("clearAllBtn");
+const welcomeScreen     = document.getElementById("welcomeScreen");
 const messagesContainer = document.getElementById("messagesContainer");
-const chatArea = document.getElementById("chatArea");
-const userInput = document.getElementById("userInput");
-const sendBtn = document.getElementById("sendBtn");
-const statusDot = document.getElementById("statusDot");
-const statusText = document.getElementById("statusText");
+const chatArea          = document.getElementById("chatArea");
+const userInput         = document.getElementById("userInput");
+const sendBtn           = document.getElementById("sendBtn");
+const statusDot         = document.getElementById("statusDot");
+const statusText        = document.getElementById("statusText");
+const userAvatar        = document.getElementById("userAvatar");
+
+// ==========================================
+// USER AVATAR INIT
+// ==========================================
+function initUserAvatar() {
+    const fullname = document.body.dataset.fullname || "";
+    const username = document.body.dataset.username || "?";
+    const letter = (fullname || username).charAt(0).toUpperCase();
+    if (userAvatar) {
+        userAvatar.textContent = letter;
+    }
+}
 
 // ==========================================
 // RENDER FUNCTIONS
 // ==========================================
-
-/** Render toàn bộ UI */
 function renderAll() {
     renderHistoryList();
     renderChatArea();
 }
 
-/** Render danh sách lịch sử */
 function renderHistoryList() {
     historyList.innerHTML = "";
     if (STATE.conversations.length === 0) {
@@ -212,41 +273,50 @@ function renderHistoryList() {
     });
 }
 
-/** Render khu vực chat — FIX: luôn clear DOM sạch trước khi render */
+/** Hiển thị loading skeleton khi đang tải messages */
+function showLoadingMessages() {
+    welcomeScreen.style.display = "none";
+    messagesContainer.style.display = "flex";
+    messagesContainer.innerHTML = `
+        <div class="msg-skeleton-wrap">
+            <div class="msg-skeleton user"></div>
+            <div class="msg-skeleton assistant"></div>
+            <div class="msg-skeleton user short"></div>
+            <div class="msg-skeleton assistant"></div>
+        </div>
+    `;
+}
+
 function renderChatArea() {
-    // Xóa typing indicator nếu đang hiển thị cho conv khác
     const existingIndicator = document.getElementById("typingIndicator");
     if (existingIndicator && STATE.loadingConvId !== STATE.activeId) {
         existingIndicator.remove();
     }
 
     const conv = getActive();
-    if (!conv || conv.messages.length === 0) {
+    if (!conv || STATE.activeMessages.length === 0) {
         welcomeScreen.style.display = "flex";
         messagesContainer.style.display = "none";
-        messagesContainer.innerHTML = ""; // Xóa sạch messages cũ
+        messagesContainer.innerHTML = "";
         return;
     }
     welcomeScreen.style.display = "none";
     messagesContainer.style.display = "flex";
-    messagesContainer.innerHTML = ""; // Luôn clear trước khi render lại
+    messagesContainer.innerHTML = "";
 
-    conv.messages.forEach(msg => {
+    STATE.activeMessages.forEach(msg => {
         appendMessageToDOM(msg.role, msg.content, false);
     });
 
     scrollToBottom(false);
 }
 
-/** Thêm một message vào DOM — chỉ render nếu conv này đang active */
 function appendMessageToDOM(role, content, animate = true, targetConvId = null) {
-    // Nếu có targetConvId và không phải conv đang active -> không render DOM
     if (targetConvId && targetConvId !== STATE.activeId) return;
 
     const time = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
     const row = document.createElement("div");
     row.className = `message-row ${role}${animate ? "" : " no-animate"}`;
-
 
     let bubbleContent = "";
     if (role === "assistant") {
@@ -273,10 +343,8 @@ function appendMessageToDOM(role, content, animate = true, targetConvId = null) 
         </div>` : ""}
     `;
 
-    // Highlight code blocks
     row.querySelectorAll("pre code").forEach(el => hljs.highlightElement(el));
 
-    // Copy button
     const copyBtn = row.querySelector(".copy-btn");
     if (copyBtn) {
         copyBtn.addEventListener("click", () => copyText(content, copyBtn));
@@ -286,7 +354,6 @@ function appendMessageToDOM(role, content, animate = true, targetConvId = null) 
     return row;
 }
 
-/** Thêm typing indicator */
 function showTypingIndicator(convId) {
     const indicator = document.createElement("div");
     indicator.className = "typing-indicator";
@@ -307,8 +374,7 @@ function showTypingIndicator(convId) {
 function removeTypingIndicator(convId = null) {
     const el = document.getElementById("typingIndicator");
     if (!el) return;
-    // Chỉ xóa nếu đúng conv hoặc không quan tâm conv
-    if (!convId || el.dataset.convId === convId) {
+    if (!convId || el.dataset.convId == convId) {
         el.remove();
     }
 }
@@ -321,34 +387,21 @@ function scrollToBottom(smooth = true) {
 }
 
 // ==========================================
-// SEND MESSAGE
+// SEND MESSAGE (server-backed)
 // ==========================================
 async function sendMessage() {
     if (STATE.isLoading) return;
     const text = userInput.value.trim();
     if (!text) return;
 
-    // Nếu chưa có cuộc hội thoại, tạo mới
-    if (!STATE.activeId) {
-        createNewConversation();
-        renderAll();
-    }
+    // Nếu chưa có active conversation, server sẽ tự tạo
+    let convId = STATE.activeId;
 
-    const conv = getActive();
-    const convId = conv.id; // Ghi lại ID để tránh race condition khi switch conv
-
-    // Ẩn welcome screen, hiện messages
+    // Ẩn welcome screen
     welcomeScreen.style.display = "none";
     messagesContainer.style.display = "flex";
 
-    // Lấy history TRƯỚC khi thêm message mới
-    const historyForAPI = [...conv.messages];
-
-    // Thêm message của user vào state
-    conv.messages.push({ role: "user", content: text });
-    conv.title = autoTitle(conv);
-    saveToStorage();
-    renderHistoryList();
+    // Thêm message user vào DOM ngay
     appendMessageToDOM("user", text, true, convId);
 
     userInput.value = "";
@@ -357,44 +410,55 @@ async function sendMessage() {
     STATE.isLoading = true;
     STATE.loadingConvId = convId;
 
-    // Hiển thị typing indicator (chỉ nếu conv này đang active)
-    if (STATE.activeId === convId) {
-        showTypingIndicator(convId);
+    if (STATE.activeId === convId || convId === null) {
+        showTypingIndicator(convId || "new");
     }
 
     try {
-        const response = await fetch("/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: text, history: historyForAPI }),
+        const data = await apiPost("/api/chat", {
+            message: text,
+            conversation_id: convId || null,
         });
 
-        // Xóa typing indicator của conv này
-        removeTypingIndicator(convId);
+        const answer = data.answer || "(Không có câu trả lời)";
+        const returnedConvId = data.conversation_id;
 
-        if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.error || `HTTP ${response.status}`);
+        removeTypingIndicator(convId || "new");
+
+        // Nếu server tạo conversation mới → cập nhật state
+        if (!convId || convId !== returnedConvId) {
+            convId = returnedConvId;
+            STATE.activeId = convId;
+            STATE.loadingConvId = convId;
+            localStorage.setItem("ctu_active_conv_id", convId);
+            // Tải lại danh sách conversations
+            const convs = await apiGet("/api/conversations");
+            STATE.conversations = convs;
+            renderHistoryList();
+        } else {
+            // Cập nhật updated_at trong danh sách local (để sort)
+            const convInList = STATE.conversations.find(c => c.id === convId);
+            if (convInList) {
+                convInList.updated_at = new Date().toISOString();
+                // Re-sort
+                STATE.conversations.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+                renderHistoryList();
+            }
         }
 
-        const data = await response.json();
-        const answer = data.answer || "(Không có câu trả lời)";
+        // Thêm vào activeMessages (đồng bộ local state)
+        STATE.activeMessages.push({ role: "user", content: text });
+        STATE.activeMessages.push({ role: "assistant", content: answer });
 
-        // Lưu vào đúng conv (dù user đã switch sang conv khác)
-        conv.messages.push({ role: "assistant", content: answer });
-        saveToStorage();
-
-        // CHỈ render vào DOM nếu conv này vẫn đang active
+        // Render vào DOM
         if (STATE.activeId === convId) {
             appendMessageToDOM("assistant", answer, true, convId);
             scrollToBottom(true);
         }
-        // Nếu user đã switch sang conv khác -> cập nhật title trong sidebar (không render chat)
-        renderHistoryList();
 
     } catch (err) {
-        removeTypingIndicator(convId);
-        if (STATE.activeId === convId) {
+        removeTypingIndicator(convId || "new");
+        if (STATE.activeId === convId || convId === null) {
             const errRow = document.createElement("div");
             errRow.className = "message-row assistant";
             errRow.style.animation = "message-appear 0.3s ease forwards";
@@ -486,16 +550,20 @@ async function checkStatus() {
 // EVENT LISTENERS
 // ==========================================
 function initEventListeners() {
-    // New chat
+    // New chat — chỉ reset UI, không tạo conv ngay (server sẽ tạo khi gửi tin đầu)
     newChatBtn.addEventListener("click", () => {
-        createNewConversation();
+        STATE.activeId = null;
+        STATE.activeMessages = [];
+        localStorage.removeItem("ctu_active_conv_id");
         renderAll();
         userInput.focus();
         closeSidebarOnMobile();
     });
 
     topbarNewBtn.addEventListener("click", () => {
-        createNewConversation();
+        STATE.activeId = null;
+        STATE.activeMessages = [];
+        localStorage.removeItem("ctu_active_conv_id");
         renderAll();
         userInput.focus();
     });
@@ -537,7 +605,7 @@ function initEventListeners() {
     sidebarCollapseBtn.addEventListener("click", collapseSidebar);
     sidebarExpandBtn.addEventListener("click", expandSidebar);
 
-    // Theme toggle — bind tất cả buttons có class .theme-toggle-btn
+    // Theme toggle
     document.querySelectorAll(".theme-toggle-btn").forEach(btn => {
         btn.addEventListener("click", toggleTheme);
     });
@@ -561,25 +629,20 @@ function initEventListeners() {
 // ==========================================
 const SIDEBAR_COLLAPSED_KEY = "ctu_sidebar_collapsed";
 
-/** Thu gọn sidebar (desktop) */
 function collapseSidebar() {
     document.body.classList.add("sidebar-collapsed");
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, "1");
 }
 
-/** Mở rộng sidebar (desktop) */
 function expandSidebar() {
     document.body.classList.remove("sidebar-collapsed");
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, "0");
 }
 
-/** Khởi tạo trạng thái sidebar từ localStorage */
 function initSidebarCollapse() {
-    // Chỉ áp dụng trên desktop
     if (window.innerWidth <= 768) return;
     const saved = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
     if (saved === "1") {
-        // Áp dụng ngay không có animation (thêm class trước khi DOM render xong)
         document.body.classList.add("sidebar-collapsed");
     }
 }
@@ -587,24 +650,17 @@ function initSidebarCollapse() {
 // ==========================================
 // SPEECH-TO-TEXT (Web Speech API)
 // ==========================================
-const micBtn = document.getElementById("micBtn");
+const micBtn  = document.getElementById("micBtn");
 const micToast = document.getElementById("micToast");
 
-// Kiểm tra trình duyệt có hỗ trợ Web Speech API không
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-let recognition = null;       // SpeechRecognition instance
-let isRecording = false;       // Trạng thái đang ghi âm
-let toastTimer = null;         // Timer ẩn toast
-let interimBuffer = "";        // Text tạm (chưa final)
-let preMicText = "";           // Nội dung trong input trước khi bật mic
+let recognition    = null;
+let isRecording    = false;
+let toastTimer     = null;
+let interimBuffer  = "";
+let preMicText     = "";
 
-/**
- * Hiển thị toast notification
- * @param {string} message - Nội dung thông báo
- * @param {"info"|"recording"|"error"} type - Loại toast
- * @param {number} duration - Thời gian ẩn (ms), 0 = không tự ẩn
- */
 function showMicToast(message, type = "info", duration = 0) {
     if (toastTimer) clearTimeout(toastTimer);
     micToast.className = "mic-toast";
@@ -616,7 +672,6 @@ function showMicToast(message, type = "info", duration = 0) {
         micToast.innerHTML = message;
     }
 
-    // Force reflow để restart animation
     micToast.offsetHeight;
     micToast.classList.add("visible");
 
@@ -630,14 +685,13 @@ function hideMicToast() {
     micToast.classList.remove("visible");
 }
 
-/** Khởi tạo SpeechRecognition */
 function initSpeechRecognition() {
     if (!SpeechRecognition) return null;
 
     const rec = new SpeechRecognition();
-    rec.lang = "vi-VN";          // Tiếng Việt
-    rec.continuous = true;       // Tiếp tục lắng nghe
-    rec.interimResults = true;   // Hiển thị text tạm thời
+    rec.lang = "vi-VN";
+    rec.continuous = true;
+    rec.interimResults = true;
 
     rec.onstart = () => {
         isRecording = true;
@@ -660,17 +714,14 @@ function initSpeechRecognition() {
             }
         }
 
-        // Ghép text final vào input (giữ nội dung trước đó nếu có)
         if (finalText) {
             const base = preMicText.trim();
             const current = userInput.value;
-            // Tính phần đã nhận được sau preMicText
             const recognized = current.slice(base.length).trim();
             userInput.value = base ? base + " " + recognized + finalText : recognized + finalText;
-            preMicText = userInput.value; // Cập nhật base
+            preMicText = userInput.value;
             interimBuffer = "";
         } else if (interimBuffer) {
-            // Hiển thị text tạm (interim) vào input để người dùng xem realtime
             const base = preMicText.trim();
             userInput.value = base ? base + " " + interimBuffer : interimBuffer;
         }
@@ -707,7 +758,6 @@ function initSpeechRecognition() {
 
     rec.onend = () => {
         if (isRecording) {
-            // Ghi âm kết thúc tự nhiên (không phải do user nhấn stop)
             isRecording = false;
             micBtn.classList.remove("recording");
             hideMicToast();
@@ -717,7 +767,6 @@ function initSpeechRecognition() {
     return rec;
 }
 
-/** Bật/tắt ghi âm */
 function toggleMic() {
     if (!SpeechRecognition) {
         showMicToast("❌ Trình duyệt không hỗ trợ nhận dạng giọng nói. Hãy dùng Chrome hoặc Edge.", "error", 4000);
@@ -725,20 +774,17 @@ function toggleMic() {
     }
 
     if (isRecording) {
-        // Dừng ghi âm
         isRecording = false;
         recognition.stop();
         micBtn.classList.remove("recording");
         hideMicToast();
 
-        // Xóa text interim còn lại, giữ text final
         const finalizedText = preMicText.trim();
         userInput.value = finalizedText;
         autoResizeInput();
         updateSendBtn();
         userInput.focus();
     } else {
-        // Bắt đầu ghi âm — tạo lại instance mỗi lần để tránh lỗi trạng thái cũ
         recognition = initSpeechRecognition();
         if (!recognition) return;
         try {
@@ -749,7 +795,6 @@ function toggleMic() {
     }
 }
 
-// Kiểm tra hỗ trợ và gắn event cho nút mic
 function initMicButton() {
     if (!SpeechRecognition) {
         micBtn.classList.add("unsupported");
@@ -761,16 +806,17 @@ function initMicButton() {
 // ==========================================
 // INIT
 // ==========================================
-function init() {
+async function init() {
     initTheme();
-    initSidebarCollapse();   // Áp dụng sớm để tránh flash layout
-    loadFromStorage();
+    initSidebarCollapse();
+    initUserAvatar();
 
-    if (STATE.conversations.length === 0 || !STATE.activeId) {
-        STATE.activeId = null;
-    }
+    // Hiện loading state ban đầu
+    historyList.innerHTML = `<div class="history-empty">Đang tải...</div>`;
 
-    renderAll();
+    // Tải conversations từ server
+    await loadConversationsFromServer();
+
     initEventListeners();
     initMicButton();
     checkStatus();

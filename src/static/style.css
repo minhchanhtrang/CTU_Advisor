@@ -1322,3 +1322,156 @@ body.dark-mode .mic-toast {
     0%, 100% { opacity: 1; }
     50%       { opacity: 0.2; }
 }
+
+/* ==========================================
+   USER INFO BLOCK (Sidebar Footer)
+   ========================================== */
+
+.user-info-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 8px;
+    transition: background var(--transition-fast);
+}
+
+.user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--brand-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+.user-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.user-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-handle {
+    font-size: 0.72rem;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background var(--transition-fast), color var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.logout-btn:hover {
+    background: rgba(220, 38, 38, 0.12);
+    color: #dc2626;
+}
+
+/* Sidebar info row (status + clear all) */
+.sidebar-info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+/* Collapsed sidebar — hide user details but show avatar */
+body.sidebar-collapsed .user-details,
+body.sidebar-collapsed .logout-btn {
+    display: none;
+}
+
+body.sidebar-collapsed .user-info-block {
+    justify-content: center;
+    padding: 8px;
+}
+
+body.sidebar-collapsed .sidebar-info-row {
+    justify-content: center;
+}
+
+body.sidebar-collapsed .sidebar-info span:last-child,
+body.sidebar-collapsed .clear-all-btn span {
+    display: none;
+}
+
+/* ==========================================
+   MESSAGE SKELETON LOADER
+   ========================================== */
+
+.msg-skeleton-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px 16px;
+    width: 100%;
+}
+
+.msg-skeleton {
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(
+        90deg,
+        var(--bg-elevated) 0%,
+        var(--bg-hover) 40%,
+        var(--bg-elevated) 80%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.msg-skeleton.user {
+    max-width: 65%;
+    align-self: flex-end;
+    border-radius: 18px 18px 4px 18px;
+}
+
+.msg-skeleton.assistant {
+    max-width: 80%;
+    align-self: flex-start;
+    border-radius: 18px 18px 18px 4px;
+    height: 80px;
+}
+
+.msg-skeleton.short {
+    max-width: 40%;
+    height: 44px;
+}
+
+@keyframes skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
