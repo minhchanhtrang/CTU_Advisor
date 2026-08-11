@@ -18,9 +18,14 @@ from flask_login import (
     LoginManager, UserMixin, login_user, logout_user,
     login_required, current_user
 )
+from functools import wraps
 from dotenv import load_dotenv
 from generator import setup_chatbot, ask
 import database as db
+import threading
+import uuid
+import sys
+import os
 
 load_dotenv()
 
@@ -31,6 +36,7 @@ template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templat
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
 app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.secret_key = os.getenv("SECRET_KEY", "ctu-advisor-secret-2024-change-me")
 CORS(app)
 
@@ -50,9 +56,21 @@ class User(UserMixin):
         self.id = user_dict["id"]
         self.username = user_dict["username"]
         self.full_name = user_dict.get("full_name", "")
+        self.is_admin = user_dict.get("is_admin", False)
 
     def get_id(self):
         return str(self.id)
+
+
+def admin_required(f):
+    """Decorator: chỉ cho phép user có is_admin=True vào route."""
+    @wraps(f)
+    @login_required
+    def decorated(*args, **kwargs):
+        if not current_user.is_admin:
+            return jsonify({"error": "Forbidden. Admin only."}), 403
+        return f(*args, **kwargs)
+    return decorated
 
 
 @login_manager.user_loader
@@ -170,6 +188,9 @@ def auth_logout():
 @login_required
 def index():
     """Trang chủ - trả về giao diện chat."""
+    import jinja2
+    template = app.jinja_env.get_template("index.html")
+    print(f"[DEBUG] Rendering template from: {template.filename}")
     return render_template("index.html", user=current_user)
 
 
@@ -360,6 +381,99 @@ def update_me():
         current_user.full_name = full_name
         return jsonify({"message": "Cập nhật thành công.", "full_name": full_name}), 200
     return jsonify({"error": "Không thể cập nhật thông tin."}), 500
+
+
+# ==========================================
+# ADMIN ROUTES
+# ==========================================
+
+# Lưu trạng thái các tác vụ rebuild đang chạy
+_rebuild_jobs: dict[str, dict] = {}
+
+
+
+@app.route("/admin/upload", methods=["POST"])
+@admin_required
+def admin_upload():
+    """
+    Admin upload một hoặc nhiều file .md vào thư mục data/processed/,
+    sau đó kick off một background thread để rebuild vector DB.
+    """
+    if "files" not in request.files:
+        return jsonify({"error": "Không tìm thấy file."}), 400
+
+    uploaded_files = request.files.getlist("files")
+    if not uploaded_files or all(f.filename == "" for f in uploaded_files):
+        return jsonify({"error": "Vui lòng chọn ít nhất một file .md."}), 400
+
+    processed_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "data", "processed"
+    )
+    os.makedirs(processed_dir, exist_ok=True)
+
+    saved_files = []
+    for f in uploaded_files:
+        if not f.filename.lower().endswith(".md"):
+            return jsonify({"error": f"File '{f.filename}' không phải .md."}), 400
+        dest = os.path.join(processed_dir, f.filename)
+        f.save(dest)
+        saved_files.append(f.filename)
+
+    # Khởi động background thread rebuild vector
+    job_id = str(uuid.uuid4())[:8]
+    _rebuild_jobs[job_id] = {"status": "running", "logs": [], "files": saved_files}
+
+    def _run_rebuild(job_id, processed_dir):
+        import sys
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from retriever import build_vector_database
+        import logging
+
+        class ListHandler(logging.Handler):
+            def emit(self, record):
+                _rebuild_jobs[job_id]["logs"].append(self.format(record))
+
+        rebuild_logger = logging.getLogger("retriever")
+        handler = ListHandler()
+        handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+        rebuild_logger.addHandler(handler)
+
+        try:
+            persist_dir = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "..", "vector_db"
+            )
+            build_vector_database(
+                processed_dir=processed_dir,
+                persist_dir=persist_dir,
+                reset_collection=False,
+            )
+            _rebuild_jobs[job_id]["status"] = "done"
+            _rebuild_jobs[job_id]["logs"].append("✅ Hoàn tất! Vector DB đã được cập nhật.")
+        except Exception as e:
+            _rebuild_jobs[job_id]["status"] = "error"
+            _rebuild_jobs[job_id]["logs"].append(f"❌ Lỗi: {e}")
+        finally:
+            rebuild_logger.removeHandler(handler)
+
+    t = threading.Thread(target=_run_rebuild, args=(job_id, processed_dir), daemon=True)
+    t.start()
+
+    return jsonify({
+        "message": f"Đã tải lên {len(saved_files)} file. Đang xử lý...",
+        "job_id": job_id,
+        "files": saved_files,
+    }), 202
+
+
+@app.route("/admin/rebuild-status/<job_id>", methods=["GET"])
+@admin_required
+def admin_rebuild_status(job_id):
+    """Polling endpoint: trả về trạng thái và log của job rebuild."""
+    job = _rebuild_jobs.get(job_id)
+    if not job:
+        return jsonify({"error": "Không tìm thấy job."}), 404
+    return jsonify(job)
+
 
 
 # ==========================================

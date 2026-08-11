@@ -42,8 +42,13 @@ def init_db():
                     username VARCHAR(80) UNIQUE NOT NULL,
                     password_hash TEXT NOT NULL,
                     full_name VARCHAR(150),
+                    is_admin BOOLEAN DEFAULT FALSE,
                     created_at TIMESTAMP DEFAULT NOW()
                 );
+            """)
+            # Thêm cột is_admin nếu bảng users đã tồn tại trước đó (migration)
+            cur.execute("""
+                ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
             """)
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS conversations (
@@ -85,6 +90,7 @@ def init_db():
 # ==========================================
 # USER CRUD
 # ==========================================
+
 
 def create_user(username: str, password: str, full_name: str = "") -> dict | None:
     """
@@ -137,7 +143,7 @@ def get_user_by_id(user_id: int) -> dict | None:
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(
-                "SELECT id, username, full_name, created_at FROM users WHERE id = %s",
+                "SELECT id, username, full_name, is_admin, created_at FROM users WHERE id = %s",
                 (user_id,),
             )
             row = cur.fetchone()
