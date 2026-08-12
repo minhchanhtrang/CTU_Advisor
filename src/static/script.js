@@ -174,6 +174,98 @@ async function deleteConversation(id) {
     }
 }
 
+/** Đổi tên conversation – hiển thị inline input trong sidebar */
+function startRenameConversation(convId) {
+    const item = document.querySelector(`.history-item[data-conv-id="${convId}"]`);
+    if (!item) return;
+
+    const titleSpan = item.querySelector(".history-item-title");
+    const oldTitle = STATE.conversations.find(c => c.id === convId)?.title || "";
+
+    // Đã đang trong trạng thái rename → bỏ qua
+    if (item.classList.contains("renaming")) return;
+    item.classList.add("renaming");
+
+    // Tạo input thay thế span
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "history-item-rename-input";
+    input.value = oldTitle;
+    input.maxLength = 100;
+
+    titleSpan.replaceWith(input);
+    input.focus();
+    input.select();
+
+    // Ẩn các nút action khi đang rename
+    const actions = item.querySelector(".history-item-actions");
+    if (actions) actions.style.visibility = "hidden";
+
+    async function commitRename() {
+        const newTitle = input.value.trim();
+        item.classList.remove("renaming");
+        if (actions) actions.style.visibility = "";
+
+        if (!newTitle || newTitle === oldTitle) {
+            // Hủy – khôi phục span cũ
+            const span = document.createElement("span");
+            span.className = "history-item-title";
+            span.textContent = oldTitle;
+            input.replaceWith(span);
+            return;
+        }
+
+        // Optimistic update UI
+        const span = document.createElement("span");
+        span.className = "history-item-title";
+        span.textContent = newTitle;
+        input.replaceWith(span);
+
+        try {
+            await apiPatch(`/api/conversations/${convId}/title`, { title: newTitle });
+            // Cập nhật local state
+            const conv = STATE.conversations.find(c => c.id === convId);
+            if (conv) conv.title = newTitle;
+            // Re-render nhẹ nhàng (chỉ span title)
+            span.textContent = newTitle;
+        } catch (e) {
+            console.error("Lỗi đổi tên:", e);
+            // Rollback nếu lỗi
+            span.textContent = oldTitle;
+            const conv = STATE.conversations.find(c => c.id === convId);
+            if (conv) conv.title = oldTitle;
+            showRenameError();
+        }
+    }
+
+    function cancelRename() {
+        item.classList.remove("renaming");
+        if (actions) actions.style.visibility = "";
+        const span = document.createElement("span");
+        span.className = "history-item-title";
+        span.textContent = oldTitle;
+        input.replaceWith(span);
+    }
+
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); commitRename(); }
+        if (e.key === "Escape") { e.preventDefault(); cancelRename(); }
+        e.stopPropagation();
+    });
+    input.addEventListener("blur", commitRename);
+    input.addEventListener("click", (e) => e.stopPropagation());
+}
+
+function showRenameError() {
+    // Toast nhỏ thông báo lỗi rename
+    const toast = document.createElement("div");
+    toast.className = "rename-error-toast";
+    toast.textContent = "Không thể đổi tên. Vui lòng thử lại.";
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add("visible"));
+    setTimeout(() => { toast.classList.remove("visible"); setTimeout(() => toast.remove(), 300); }, 2500);
+}
+
 /** Xóa tất cả conversations */
 async function clearAllConversations() {
     try {
@@ -263,15 +355,33 @@ function renderHistoryList() {
     STATE.conversations.forEach(conv => {
         const item = document.createElement("div");
         item.className = "history-item" + (conv.id === STATE.activeId ? " active" : "");
+        item.dataset.convId = conv.id;
         item.innerHTML = `
             <span class="history-item-title">${escapeHtml(conv.title)}</span>
-            <button class="history-item-delete" aria-label="Xóa hội thoại này">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-            </button>
+            <div class="history-item-actions">
+                <button class="history-item-rename" aria-label="Đổi tên hội thoại" title="Đổi tên">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                </button>
+                <button class="history-item-delete" aria-label="Xóa hội thoại này" title="Xóa">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
         `;
         item.addEventListener("click", () => switchConversation(conv.id));
+        // Double-click title để rename
+        item.querySelector(".history-item-title").addEventListener("dblclick", (e) => {
+            e.stopPropagation();
+            startRenameConversation(conv.id);
+        });
+        item.querySelector(".history-item-rename").addEventListener("click", (e) => {
+            e.stopPropagation();
+            startRenameConversation(conv.id);
+        });
         item.querySelector(".history-item-delete").addEventListener("click", (e) => {
             e.stopPropagation();
             deleteConversation(conv.id);

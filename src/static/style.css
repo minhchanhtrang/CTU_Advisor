@@ -393,27 +393,88 @@ body.dark-mode .sidebar-expand-btn::after {
     color: var(--text-primary);
 }
 
+/* Actions group (rename + delete) */
+.history-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.history-item:hover .history-item-actions,
+.history-item.active .history-item-actions {
+    opacity: 1;
+}
+
+.history-item-rename,
 .history-item-delete {
     background: none;
     border: none;
     color: var(--text-tertiary);
     cursor: pointer;
-    padding: 3px;
+    padding: 4px;
     border-radius: 5px;
-    opacity: 0;
-    transition: opacity var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
     display: flex;
     align-items: center;
+    transition: background var(--transition-fast), color var(--transition-fast);
     flex-shrink: 0;
 }
 
-.history-item:hover .history-item-delete {
-    opacity: 1;
+.history-item-rename:hover {
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--brand-primary);
 }
 
 .history-item-delete:hover {
     background: rgba(239, 68, 68, 0.15);
     color: var(--error);
+}
+
+/* Inline rename input */
+.history-item-rename-input {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--bg-input);
+    border: 1.5px solid var(--brand-primary);
+    border-radius: 5px;
+    padding: 2px 7px;
+    outline: none;
+    box-shadow: 0 0 0 3px var(--brand-glow);
+    transition: box-shadow var(--transition-fast);
+    width: 100%;
+}
+
+.history-item-rename-input:focus {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
+}
+
+/* Rename error toast */
+.rename-error-toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--error);
+    color: #fff;
+    font-size: 13px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 9999;
+    white-space: nowrap;
+}
+
+.rename-error-toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }
 
 .history-empty {
