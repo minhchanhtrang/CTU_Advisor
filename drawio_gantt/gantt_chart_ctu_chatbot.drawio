@@ -1,0 +1,103 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="CTU Chatbot Gantt Chart" id="0">
+    <mxGraphModel dx="1084" dy="592" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gantt_title" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=16;fontColor=#1a365d;" value="&amp;nbsp;PROJECT IMPLEMENTATION SCHEDULE (GANTT CHART)" vertex="1">
+          <mxGeometry height="35" width="1035" x="40" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_task" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;fillColor=#1a365d;fontColor=#ffffff;strokeColor=#1a365d;fontSize=12;startSize=30;swimlaneLine=0;" value="Project Task Phase" vertex="1">
+          <mxGeometry height="420" width="320" x="40" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_W1" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2b6cb0;fontColor=#ffffff;strokeColor=#1a365d;fontSize=11;startSize=30;swimlaneLine=1;" value="W1" vertex="1">
+          <mxGeometry height="420" width="55" x="360" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_W2" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2b6cb0;fontColor=#ffffff;strokeColor=#1a365d;fontSize=11;startSize=30;swimlaneLine=1;" value="W2" vertex="1">
+          <mxGeometry height="420" width="55" x="415" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_W3" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2b6cb0;fontColor=#ffffff;strokeColor=#1a365d;fontSize=11;startSize=30;swimlaneLine=1;" value="W3" vertex="1">
+          <mxGeometry height="420" width="55" x="470" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_W4" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2b6cb0;fontColor=#ffffff;strokeColor=#1a365d;fontSize=11;startSize=30;swimlaneLine=1;" value="W4" vertex="1">
+          <mxGeometry height="420" width="55" x="525" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_W5" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2b6cb0;fontColor=#ffffff;strokeColor=#1a365d;fontSize=11;startSize=30;swimlaneLine=1;" value="W5" vertex="1">
+          <mxGeometry height="420" width="55" x="580" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_W6" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2b6cb0;fontColor=#ffffff;strokeColor=#1a365d;fontSize=11;startSize=30;swimlaneLine=1;" value="W6" vertex="1">
+          <mxGeometry height="420" width="55" x="635" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_W7" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2b6cb0;fontColor=#ffffff;strokeColor=#1a365d;fontSize=11;startSize=30;swimlaneLine=1;" value="W7" vertex="1">
+          <mxGeometry height="420" width="55" x="690" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_W8" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2b6cb0;fontColor=#ffffff;strokeColor=#1a365d;fontSize=11;startSize=30;swimlaneLine=1;" value="W8" vertex="1">
+          <mxGeometry height="420" width="55" x="745" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_W9" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2b6cb0;fontColor=#ffffff;strokeColor=#1a365d;fontSize=11;startSize=30;swimlaneLine=1;" value="W9" vertex="1">
+          <mxGeometry height="420" width="55" x="800" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_W10" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2b6cb0;fontColor=#ffffff;strokeColor=#1a365d;fontSize=11;startSize=30;swimlaneLine=1;" value="W10" vertex="1">
+          <mxGeometry height="420" width="55" x="855" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_W11" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2b6cb0;fontColor=#ffffff;strokeColor=#1a365d;fontSize=11;startSize=30;swimlaneLine=1;" value="W11" vertex="1">
+          <mxGeometry height="420" width="55" x="910" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_W12" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2b6cb0;fontColor=#ffffff;strokeColor=#1a365d;fontSize=11;startSize=30;swimlaneLine=1;" value="W12" vertex="1">
+          <mxGeometry height="420" width="55" x="965" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_W13" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2b6cb0;fontColor=#ffffff;strokeColor=#1a365d;fontSize=11;startSize=30;swimlaneLine=1;" value="W13" vertex="1">
+          <mxGeometry height="420" width="55" x="1020" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_t1" parent="1" style="text;html=1;strokeColor=#d0d0d0;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=10;fontStyle=1;fontSize=11;" value="1. Project Initiation &amp; Architecture Design" vertex="1">
+          <mxGeometry height="45" width="320" x="40" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="bar_t1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=10;fontColor=#000000;align=center;verticalAlign=middle;" value="Weeks 1-2" vertex="1">
+          <mxGeometry height="29" width="102" x="364" y="98" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_t2" parent="1" style="text;html=1;strokeColor=#d0d0d0;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=10;fontStyle=1;fontSize=11;" value="2. Data Eng &amp; Knowledge Base Construction" vertex="1">
+          <mxGeometry height="45" width="320" x="40" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="bar_t2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=10;fontColor=#000000;align=center;verticalAlign=middle;" value="Weeks 3-4" vertex="1">
+          <mxGeometry height="29" width="102" x="474" y="143" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_t3" parent="1" style="text;html=1;strokeColor=#d0d0d0;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=10;fontStyle=1;fontSize=11;" value="3. Retrieval System Implementation (Hybrid/RRF)" vertex="1">
+          <mxGeometry height="45" width="320" x="40" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="bar_t3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#007fff;fontStyle=1;fontSize=10;fontColor=#000000;align=center;verticalAlign=middle;" value="Weeks 5-6" vertex="1">
+          <mxGeometry height="29" width="102" x="584" y="188" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_t4" parent="1" style="text;html=1;strokeColor=#d0d0d0;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=10;fontStyle=1;fontSize=11;" value="4. LLM Integration &amp; Prompt Engineering" vertex="1">
+          <mxGeometry height="45" width="320" x="40" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="bar_t4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=10;fontColor=#000000;align=center;verticalAlign=middle;" value="Weeks 7-8" vertex="1">
+          <mxGeometry height="29" width="102" x="694" y="233" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_t5" parent="1" style="text;html=1;strokeColor=#d0d0d0;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=10;fontStyle=1;fontSize=11;" value="5. Backend API &amp; Entity Recognition Dev" vertex="1">
+          <mxGeometry height="45" width="320" x="40" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="bar_t5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=10;fontColor=#000000;align=center;verticalAlign=middle;" value="Weeks 9-10" vertex="1">
+          <mxGeometry height="29" width="102" x="804" y="278" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_t6" parent="1" style="text;html=1;strokeColor=#d0d0d0;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=10;fontStyle=1;fontSize=11;" value="6. User Interface Development (Chat Web UI)" vertex="1">
+          <mxGeometry height="45" width="320" x="40" y="315" as="geometry" />
+        </mxCell>
+        <mxCell id="bar_t6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=10;fontColor=#000000;align=center;verticalAlign=middle;" value="Weeks 11" vertex="1">
+          <mxGeometry height="29" width="47" x="914" y="323" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_t7" parent="1" style="text;html=1;strokeColor=#d0d0d0;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=10;fontStyle=1;fontSize=11;" value="7. System Integration &amp; QA (98-Q RAGAS Eval)" vertex="1">
+          <mxGeometry height="45" width="320" x="40" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="bar_t7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=10;fontColor=#000000;align=center;verticalAlign=middle;" value="Weeks 12" vertex="1">
+          <mxGeometry height="29" width="47" x="969" y="368" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_t8" parent="1" style="text;html=1;strokeColor=#d0d0d0;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=10;fontStyle=1;fontSize=11;" value="8. Documentation &amp; Final Project Defense" vertex="1">
+          <mxGeometry height="45" width="320" x="40" y="405" as="geometry" />
+        </mxCell>
+        <mxCell id="bar_t8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=10;fontColor=#000000;align=center;verticalAlign=middle;" value="Weeks 13" vertex="1">
+          <mxGeometry height="29" width="47" x="1024" y="413" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
