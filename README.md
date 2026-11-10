@@ -124,10 +124,9 @@ Cài dependency:
 ```bash
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-python -m pip install torch llama-index-embeddings-huggingface llama-index-llms-google-genai llama-index-retrievers-bm25 python-frontmatter sentence-transformers einops
 ```
 
-Lệnh bổ sung cần thiết vì [requirements.txt](requirements.txt) hiện chưa liệt kê đủ các thư viện được import bởi pipeline đang dùng. Các dependency chưa được khóa phiên bản, nên khả năng tái lập môi trường giữa các thời điểm còn hạn chế. Nếu muốn dùng CUDA, chọn bản PyTorch phù hợp tại [hướng dẫn chính thức](https://pytorch.org/get-started/locally/).
+[requirements.txt](requirements.txt) bao gồm các thư viện cho ứng dụng web, pipeline RAG và công cụ đánh giá. Các dependency chưa được khóa phiên bản. Nếu muốn dùng CUDA, chọn bản PyTorch phù hợp tại [hướng dẫn chính thức](https://pytorch.org/get-started/locally/).
 
 ### 3. Cấu hình môi trường
 
@@ -226,10 +225,10 @@ Các API chat, hội thoại và tài khoản yêu cầu session đăng nhập; 
 
 Repository có sẵn bộ câu hỏi đánh giá, dữ liệu đầu vào đã điền và báo cáo kết quả trong [data/evaluate](data/evaluate). Các tệp này giúp theo dõi và tái lập quy trình đánh giá RAG.
 
-1. Cài thêm thư viện:
+1. Cài các thư viện (nếu chưa thực hiện ở bước cài đặt):
 
    ```bash
-   python -m pip install ragas datasets langchain-google-genai langchain-huggingface pandas openpyxl
+   python -m pip install -r requirements.txt
    ```
 2. Sử dụng [ragas_input_template.xlsx](data/evaluate/ragas_input_template.xlsx) trong thư mục `data/evaluate`, sheet `ragas_data`, với các cột `id`, `question`, `ground_truth`.
 3. Kiểm tra cấu hình `ONLY_IDS` trong cả hai script. Hiện chúng chứa danh sách ID cố định; đặt `[]` nếu muốn xử lý toàn bộ bộ câu hỏi.

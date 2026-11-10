@@ -1,12 +1,31 @@
-llama-index
-llama-index-core
-llama-parse
-llama-index-llms-gemini
-llama-index-embeddings-gemini
-python-dotenv
-chromadb
-llama-index-vector-stores-chroma
+# Web application and PostgreSQL
 flask
 flask-cors
 flask-login
+jinja2
+werkzeug
 psycopg2-binary
+python-dotenv
+
+# RAG, Gemini and vector storage
+llama-index-core
+llama-index-readers-file
+llama-index-llms-google-genai
+llama-index-embeddings-huggingface
+llama-index-retrievers-bm25
+llama-index-vector-stores-chroma
+chromadb
+python-frontmatter
+
+# Local multilingual embeddings (install a suitable PyTorch build for CUDA)
+torch
+sentence-transformers
+einops
+
+# Batch export and RAGAS evaluation
+pandas
+openpyxl
+datasets
+ragas
+langchain-google-genai
+langchain-huggingface
