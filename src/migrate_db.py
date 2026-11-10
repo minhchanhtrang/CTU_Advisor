@@ -1,6 +1,5 @@
 """
 migrate_db.py - Drop schema cu, tao lai schema moi cho CTU Advisor.
-Chay 1 lan duy nhat: python src/migrate_db.py
 """
 import psycopg2
 import os
