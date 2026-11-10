@@ -4,6 +4,8 @@
 
 Đây là project phục vụ học tập và trình bày năng lực phát triển ứng dụng AI. Thông tin trả lời cần được đối chiếu với văn bản của trường; dự án không đại diện cho kênh tư vấn chính thức của Đại học Cần Thơ.
 
+Link Demo Giao diện: https://lambent-blini-161fb6.netlify.app/
+
 ## Chức năng đã triển khai
 
 - **Hỏi đáp theo tài liệu:** tra cứu thông tin ngành học, tín chỉ, môn học và quy chế trong bộ dữ liệu được cung cấp.
