@@ -44,8 +44,10 @@ answer_relevancy = AnswerRelevancy(strictness=1)
 
 # Luôn phân giải theo thư mục chứa file .py này, để chạy từ bất kỳ đâu cũng đúng
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_FILE = os.path.join(SCRIPT_DIR, "ragas_input_filled.xlsx")
-OUTPUT_FILE = os.path.join(SCRIPT_DIR, "ragas_ket_qua.csv")
+PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
+EVALUATE_DIR = os.path.join(PROJECT_DIR, "data", "evaluate")
+INPUT_FILE = os.path.join(EVALUATE_DIR, "ragas_input_filled.xlsx")
+OUTPUT_FILE = os.path.join(EVALUATE_DIR, "ragas_ket_qua.csv")
 CONTEXT_SEP = "|||"
 
 USE_LLM_PROVIDER = "google"        # "google" hoặc "openai" -- LLM giám khảo (bắt buộc gọi API)

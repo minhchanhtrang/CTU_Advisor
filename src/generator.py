@@ -355,8 +355,6 @@ def ask(chatbot_state, user_input, chat_history: list = None):
 
     return response.response
 
-
-
 def chat_loop():
     # Truyền persist_dir tương đối so với vị trí file generator.py
     _persist_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "vector_db")
